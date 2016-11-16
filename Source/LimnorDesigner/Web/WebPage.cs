@@ -2819,12 +2819,19 @@ namespace Limnor.WebBuilder
 		{
 			if (_htmlEditor != null)
 			{
-				List<string> targets = new List<string>();
-				targets.Add(Path.GetFileNameWithoutExtension(_htmlEditor.HtmlFile));
-				targets.Add("ideloader");
-				targets.Add("LimnorStudio");
-				targets.Add("htmlEditorClient");
-				DesignUtil.DeleteInternetExplorerCache(targets.ToArray());
+				try
+				{
+					List<string> targets = new List<string>();
+					targets.Add(Path.GetFileNameWithoutExtension(_htmlEditor.HtmlFile));
+					targets.Add("ideloader");
+					targets.Add("LimnorStudio");
+					targets.Add("htmlEditorClient");
+					DesignUtil.DeleteInternetExplorerCache(targets.ToArray());
+				}
+				catch (Exception err)
+				{
+					DesignUtil.WriteToOutputWindowAndLog("Cannot remove web page cache. {0}", err.Message);
+				}
 			}
 		}
 		public void RefreshWebDisplay()
