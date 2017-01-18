@@ -524,8 +524,8 @@ namespace XHost
 				}
 				if (_deletingImage)
 				{
-					throw new ExceptionIgnore();
-					//return;
+					//throw new ExceptionIgnore();
+					return;
 				}
 			}
 			IDrawDesignControl ddc = e.Component as IDrawDesignControl;
