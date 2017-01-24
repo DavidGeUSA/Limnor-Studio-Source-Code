@@ -2781,14 +2781,14 @@ namespace VPL
 						Attribute[] attrs;
 						if (!(obj is Form))
 						{
-							if (browsableOnly)
-							{
-								attrs = new Attribute[] { DesignOnlyAttribute.No, new BrowsableAttribute(true) };
-							}
-							else
-							{
+							//if (browsableOnly)
+							//{
+							//	attrs = new Attribute[] { DesignOnlyAttribute.No, new BrowsableAttribute(true) };
+							//}
+							//else
+							//{
 								attrs = new Attribute[] { DesignOnlyAttribute.No };
-							}
+							//}
 							eArray = TypeDescriptor.GetProperties(obj, attrs);
 							if (!browsableOnly)
 							{
@@ -2816,14 +2816,15 @@ namespace VPL
 						}
 						else
 						{
-							if (browsableOnly)
-							{
-								attrs = new Attribute[] { DesignOnlyAttribute.No, new BrowsableAttribute(true) };
-							}
-							else
-							{
+							//BrowsableAttribute attribute is not the same as "not for programming"
+							//if (browsableOnly)
+							//{
+							//	attrs = new Attribute[] { DesignOnlyAttribute.No, new BrowsableAttribute(true) };
+							//}
+							//else
+							//{
 								attrs = new Attribute[] { DesignOnlyAttribute.No };
-							}
+							//}
 							eArray = TypeDescriptor.GetProperties(obj, attrs);
 						}
 					}
