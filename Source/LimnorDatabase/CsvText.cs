@@ -44,9 +44,9 @@ namespace LimnorDatabase
 			while (true)
 			{
 				if (_delimiter == enumSourceTextDelimiter.TAB)
-					nTab = sIn.IndexOf('\t', startIndex);
+					nTab = sIn.IndexOf("\t", startIndex, StringComparison.Ordinal);
 				else
-					nTab = sIn.IndexOf(',', startIndex);
+					nTab = sIn.IndexOf(",", startIndex, StringComparison.Ordinal);
 				if (qi < 0 || qi2 < 0 || nTab <= 0)
 				{
 					break;
