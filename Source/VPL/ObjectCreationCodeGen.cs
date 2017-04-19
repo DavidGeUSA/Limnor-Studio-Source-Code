@@ -853,18 +853,25 @@ namespace VPL
 			{
 				if (pifs[i].IsBrowsable && !pifs[i].IsReadOnly)
 				{
-					if (bFirst)
+					try
 					{
-						bFirst = false;
+						object val = pifs[i].GetValue(v);
+						if (bFirst)
+						{
+							bFirst = false;
+						}
+						else
+						{
+							sCodeSnippet.Append(",");
+						}
+						sCodeSnippet.Append("{");
+						sCodeSnippet.Append("\"" + pifs[i].Name + "\",");
+						sCodeSnippet.Append(GetObjectCreationCodeSnippet(val));
+						sCodeSnippet.Append("}");
 					}
-					else
+					catch
 					{
-						sCodeSnippet.Append(",");
 					}
-					sCodeSnippet.Append("{");
-					sCodeSnippet.Append("\"" + pifs[i].Name + "\",");
-					sCodeSnippet.Append(GetObjectCreationCodeSnippet(pifs[i].GetValue(v)));
-					sCodeSnippet.Append("}");
 				}
 			}
 			sCodeSnippet.Append("})");
