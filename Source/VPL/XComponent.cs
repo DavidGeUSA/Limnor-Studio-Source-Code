@@ -19,6 +19,7 @@ using System.Reflection;
 using System.Globalization;
 using System.Drawing.Design;
 using System.Windows.Forms;
+using System.CodeDom;
 
 namespace VPL
 {
@@ -43,6 +44,7 @@ namespace VPL
 		void SetTypeParameters(Type[] ts);
 		Type[] GetTypeParameters();
 		object[] GetConstructorValues();
+		CodeExpression[] GetConstructorValueExpressions();
 		Dictionary<string, object> GetConstructorParameterValues();
 		void OnConstructorValueChanged(string name, object value);
 		object GetPropertyValue(string name);
@@ -51,6 +53,7 @@ namespace VPL
 		void ResetPropertyValue(string name);
 		Dictionary<string, object> GetPropertyValues();
 		void SetAsRoot();
+		bool TestWriteProperty(string propertyName);
 	}
 	/// <summary>
 	/// wrapper for non-component
@@ -66,6 +69,7 @@ namespace VPL
 		private ConstValueSelector _constructor;
 		private Dictionary<string, object> _propertyValues; //_obj is null
 		private object _obj;
+		private bool _triedCreateInstance = false;
 		private bool _forStatic;
 		private EventHandler _customValueChange;
 		private bool _isRoot; //for the root class
@@ -359,13 +363,17 @@ namespace VPL
 			{
 				if (_obj == null)
 				{
-					if (ValueType.IsAbstract)
+					if (!_triedCreateInstance)
 					{
-						return null;
-					}
-					else
-					{
-						_obj = GetValue(); //use construuctor parameter values to create the object
+						_triedCreateInstance = true;
+						if (ValueType.IsAbstract)
+						{
+							return null;
+						}
+						else
+						{
+							_obj = GetValue(); //use construuctor parameter values to create the object
+						}
 					}
 				}
 				return _obj;
@@ -837,13 +845,25 @@ namespace VPL
 
 			public override void ResetValue(object component)
 			{
-				_originalDescriptor.ResetValue(((XClass<T>)component).ObjectValue);
+				try
+				{
+					_originalDescriptor.ResetValue(((XClass<T>)component).ObjectValue);
+				}
+				catch
+				{
+				}
 			}
 
 			public override void SetValue(object component, object value)
 			{
-				_originalDescriptor.SetValue(((XClass<T>)component).ObjectValue, value);
-				_owner.OnCustomValueChanged(Name, value);
+				try
+				{
+					_originalDescriptor.SetValue(((XClass<T>)component).ObjectValue, value);
+					_owner.OnCustomValueChanged(Name, value);
+				}
+				catch
+				{
+				}
 			}
 
 			public override bool ShouldSerializeValue(object component)
@@ -1185,6 +1205,44 @@ namespace VPL
 			}
 			return null;
 		}
+		[Browsable(false)]
+		[NotForProgramming]
+		public CodeExpression[] GetConstructorValueExpressions()
+		{
+			if (_constructor != null)
+			{
+				CodeExpression[] vs = new CodeExpression[_constructor.ParameterCount];
+				int n = 0;
+				Dictionary<string, object> values = _constructor.GetConstructorParameterValues();
+				foreach (KeyValuePair<string, object> kv in values)
+				{
+					CodeExpression exp = null;
+					object v = _constructor.GetConstructorValue(kv.Key);
+					if (v == null)
+					{
+						exp = new CodePrimitiveExpression(null);
+					}
+					else
+					{
+						ConstValueSelector cv = v as ConstValueSelector;
+						if (cv != null)
+						{
+							exp = cv.CreateExpression();
+						}
+						else
+						{
+							exp = ObjectCreationCodeGen.ObjectCreationCode(v);
+						}
+					}
+					vs[n] = exp;
+					n++;
+				}
+				return vs;
+			}
+			return null;
+		}
+		[Browsable(false)]
+		[NotForProgramming]
 		public object GetValue()
 		{
 			if (typeof(T).IsAbstract)
@@ -1208,6 +1266,40 @@ namespace VPL
 				}
 			}
 			return null;
+		}
+		[Browsable(false)]
+		[NotForProgramming]
+		public bool TestWriteProperty(string propertyName)
+		{
+			bool bRet = true;
+			if (_obj != null)
+			{
+				PropertyDescriptorCollection pdc = TypeDescriptor.GetProperties(_obj);
+				foreach (PropertyDescriptor pd in pdc)
+				{
+					if (string.CompareOrdinal(pd.Name, propertyName) == 0)
+					{
+						if (pd.IsReadOnly)
+						{
+							bRet = false;
+						}
+						else
+						{
+							object v = pd.GetValue(_obj);
+							try
+							{
+								pd.SetValue(_obj, v);
+							}
+							catch
+							{
+								bRet = false;
+							}
+						}
+						break;
+					}
+				}
+			}
+			return bRet;
 		}
 		#endregion
 	}
@@ -2141,6 +2233,44 @@ namespace VPL
 		public Dictionary<string, object> GetConstructorParameterValues()
 		{
 			return _constructorValues;
+		}
+		[Browsable(false)]
+		[NotForProgramming]
+		public CodeExpression CreateExpression()
+		{
+			CodeExpression exp = null;
+			if (_type != null)
+			{
+				CodeObjectCreateExpression coc = new CodeObjectCreateExpression();
+				coc.CreateType = new CodeTypeReference(_type);
+				if (_constructorValues != null && _constructorValues.Count > 0)
+				{
+					foreach (KeyValuePair<string, object> kv in _constructorValues)
+					{
+						CodeExpression pe = null;
+						ConstValueSelector cvs = kv.Value as ConstValueSelector;
+						if (cvs != null)
+						{
+							pe = cvs.CreateExpression();
+						}
+						else
+						{
+							pe = ObjectCreationCodeGen.ObjectCreationCode(kv.Value);
+						}
+						if (pe == null)
+						{
+							pe = new CodePrimitiveExpression(null);
+						}
+						coc.Parameters.Add(pe);
+					}
+				}
+				exp = coc;
+			}
+			if (exp == null)
+			{
+				exp = new CodePrimitiveExpression(null);
+			}
+			return exp;
 		}
 		#endregion
 
