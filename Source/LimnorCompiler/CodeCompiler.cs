@@ -1307,27 +1307,39 @@ namespace LimnorCompiler
 								}
 								coc.CreateType.TypeArguments.Clear();
 								object[] vs = null;
+								CodeExpression[] exprs = null;
 								IXType x;
 								if (_xtypeList.TryGetValue(xname, out x))
 								{
-									if (cr == null)
+									exprs = x.GetConstructorValueExpressions();
+									if (exprs != null && exprs.Length>0)
 									{
-										Type[] args = x.GetTypeParameters();
-										if (args != null)
+										for (int i = 0; i < exprs.Length; i++)
 										{
-											for (int i = 0; i < args.Length; i++)
-											{
-												coc.CreateType.TypeArguments.Add(args[i]);
-											}
+											coc.Parameters.Add(exprs[i]);
 										}
 									}
-									vs = x.GetConstructorValues();
-								}
-								if (vs != null && vs.Length > 0)
-								{
-									for (int i = 0; i < vs.Length; i++)
+									else
 									{
-										coc.Parameters.Add(ObjectCreationCodeGen.ObjectCreationCode(vs[i]));
+										if (cr == null)
+										{
+											Type[] args = x.GetTypeParameters();
+											if (args != null)
+											{
+												for (int i = 0; i < args.Length; i++)
+												{
+													coc.CreateType.TypeArguments.Add(args[i]);
+												}
+											}
+										}
+										vs = x.GetConstructorValues();
+										if (vs != null && vs.Length > 0)
+										{
+											for (int i = 0; i < vs.Length; i++)
+											{
+												coc.Parameters.Add(ObjectCreationCodeGen.ObjectCreationCode(vs[i]));
+											}
+										}
 									}
 								}
 							}
@@ -1446,6 +1458,25 @@ namespace LimnorCompiler
 				}
 			}
 		}
+		private void removeIllProperties()
+		{
+			CodeMemberMethod initMM = getInitializeMethod();
+			if (initMM != null)
+			{
+				List<CodeStatement> deletes = new List<CodeStatement>();
+				foreach (CodeStatement st in initMM.Statements)
+				{
+					CodeAssignStatement cas = st as CodeAssignStatement;
+					if (cas != null)
+					{
+					}
+				}
+				foreach (CodeStatement st in deletes)
+				{
+					initMM.Statements.Remove(st);
+				}
+			}
+		}
 		private void removeReadOnlyProperties()
 		{
 			CodeMemberMethod initMM = getInitializeMethod();
@@ -1480,12 +1511,10 @@ namespace LimnorCompiler
 							{
 								if (cfre.TargetObject is CodeThisReferenceExpression)
 								{
-									if (string.CompareOrdinal(cpre.PropertyName, "param1") == 0)
-									{
-									}
 									object obj;
 									if (nameToType.TryGetValue(cfre.FieldName, out obj))
 									{
+										bool bDeleted = false;
 										PropertyDescriptorCollection pdc = TypeDescriptor.GetProperties(obj, false);
 										foreach (PropertyDescriptor pd in pdc)
 										{
@@ -1499,11 +1528,23 @@ namespace LimnorCompiler
 														if (ro != null)
 														{
 															deletes.Add(st);
+															bDeleted = true;
 															break;
 														}
 													}
 												}
 												break;
+											}
+										}
+										if (!bDeleted)
+										{
+											IXType ix = obj as IXType;
+											if (ix != null)
+											{
+												if (!ix.TestWriteProperty(cpre.PropertyName))
+												{
+													deletes.Add(st);
+												}
 											}
 										}
 									}
