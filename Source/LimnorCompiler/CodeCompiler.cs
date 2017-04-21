@@ -1311,6 +1311,17 @@ namespace LimnorCompiler
 								IXType x;
 								if (_xtypeList.TryGetValue(xname, out x))
 								{
+									if (cr == null)
+									{
+										Type[] args = x.GetTypeParameters();
+										if (args != null)
+										{
+											for (int i = 0; i < args.Length; i++)
+											{
+												coc.CreateType.TypeArguments.Add(args[i]);
+											}
+										}
+									}
 									exprs = x.GetConstructorValueExpressions();
 									if (exprs != null && exprs.Length>0)
 									{
@@ -1321,17 +1332,6 @@ namespace LimnorCompiler
 									}
 									else
 									{
-										if (cr == null)
-										{
-											Type[] args = x.GetTypeParameters();
-											if (args != null)
-											{
-												for (int i = 0; i < args.Length; i++)
-												{
-													coc.CreateType.TypeArguments.Add(args[i]);
-												}
-											}
-										}
 										vs = x.GetConstructorValues();
 										if (vs != null && vs.Length > 0)
 										{
