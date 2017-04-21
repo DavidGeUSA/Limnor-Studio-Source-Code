@@ -1214,28 +1214,31 @@ namespace VPL
 				CodeExpression[] vs = new CodeExpression[_constructor.ParameterCount];
 				int n = 0;
 				Dictionary<string, object> values = _constructor.GetConstructorParameterValues();
-				foreach (KeyValuePair<string, object> kv in values)
+				if (values != null)
 				{
-					CodeExpression exp = null;
-					object v = _constructor.GetConstructorValue(kv.Key);
-					if (v == null)
+					foreach (KeyValuePair<string, object> kv in values)
 					{
-						exp = new CodePrimitiveExpression(null);
-					}
-					else
-					{
-						ConstValueSelector cv = v as ConstValueSelector;
-						if (cv != null)
+						CodeExpression exp = null;
+						object v = _constructor.GetConstructorValue(kv.Key);
+						if (v == null)
 						{
-							exp = cv.CreateExpression();
+							exp = new CodePrimitiveExpression(null);
 						}
 						else
 						{
-							exp = ObjectCreationCodeGen.ObjectCreationCode(v);
+							ConstValueSelector cv = v as ConstValueSelector;
+							if (cv != null)
+							{
+								exp = cv.CreateExpression();
+							}
+							else
+							{
+								exp = ObjectCreationCodeGen.ObjectCreationCode(v);
+							}
 						}
+						vs[n] = exp;
+						n++;
 					}
-					vs[n] = exp;
-					n++;
 				}
 				return vs;
 			}
