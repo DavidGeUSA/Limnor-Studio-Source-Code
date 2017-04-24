@@ -132,6 +132,22 @@ namespace LimnorDesigner.MethodBuilder
 				CodeTypeReference ctf = this.GetCodeTypeReference();
 				if (ctf != null)
 				{
+					ArrayPointer ap = _type as ArrayPointer;
+					if (ap != null)
+					{
+						int[] dims = ap.Dimnesions;
+						if (dims != null && dims.Length == 1)
+						{
+							if (dims[0] >= 0)
+							{
+								if (!t.FullName.EndsWith("[][]", StringComparison.Ordinal))
+								{
+									CodeArrayCreateExpression init = new CodeArrayCreateExpression(ap.ItemBaseType, dims[0]);
+									return new CodeVariableDeclarationStatement(ctf, this.CodeName, init);
+								}
+							}
+						}
+					}
 					return CompilerUtil.CreateVariableDeclaration(ctf, this.CodeName, this.BaseClassType, this.BaseClassType.IsPrimitive?this.ObjectInstance:null);
 				}
 			}
