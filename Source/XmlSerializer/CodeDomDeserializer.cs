@@ -18,6 +18,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 using VPL;
+using System.Collections;
 
 namespace XmlSerializer
 {
@@ -282,6 +283,7 @@ namespace XmlSerializer
 						}
 						if (string.CompareOrdinal(mif.Name, "AddRange") == 0)
 						{
+							//prevent duplicated adding of items
 							DataGridViewColumnCollection dgvcc = owner as DataGridViewColumnCollection;
 							if (dgvcc != null)
 							{
@@ -302,6 +304,17 @@ namespace XmlSerializer
 									return null;
 								}
 								dgvcc.Clear();
+							}
+							else
+							{
+								if (vs != null && vs.Length > 0)
+								{
+									IList lst = owner as IList;
+									if (lst != null)
+									{
+										lst.Clear();
+									}
+								}
 							}
 						}
 						object vret = mif.Invoke(owner, vs);
