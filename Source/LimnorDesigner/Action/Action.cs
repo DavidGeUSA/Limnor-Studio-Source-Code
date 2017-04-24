@@ -2079,13 +2079,16 @@ namespace LimnorDesigner
 							{
 								if (!(_parameterExpressions[k] is CodeDirectionExpression))
 								{
-									if (pifs[k].IsOut)
+									if (pifs[k].ParameterType.IsByRef)
 									{
-										_parameterExpressions[k] = new CodeDirectionExpression(FieldDirection.Out, _parameterExpressions[k]);
-									}
-									else if (pifs[k].ParameterType.IsByRef)
-									{
-										_parameterExpressions[k] = new CodeDirectionExpression(FieldDirection.Ref, _parameterExpressions[k]);
+										if (pifs[k].IsOut)
+										{
+											_parameterExpressions[k] = new CodeDirectionExpression(FieldDirection.Out, _parameterExpressions[k]);
+										}
+										else if (pifs[k].ParameterType.IsByRef)
+										{
+											_parameterExpressions[k] = new CodeDirectionExpression(FieldDirection.Ref, _parameterExpressions[k]);
+										}
 									}
 								}
 							}
