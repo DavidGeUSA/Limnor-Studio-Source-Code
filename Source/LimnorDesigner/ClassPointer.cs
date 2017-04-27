@@ -2690,9 +2690,13 @@ namespace LimnorDesigner
 		{
 			ActionAttachEvent aae = new ActionAttachEvent(this);
 			EventHandlerMethod ehm = AddEventhandlerMethod(webClientEventHandlerType, e, aae.ActionId, rc, caller);
-			aae.SetHandlerOwner(ehm.GetHandlerOwner());
-			SaveAction(aae, null);
-			return aae;
+			if (ehm != null)
+			{
+				aae.SetHandlerOwner(ehm.GetHandlerOwner());
+				SaveAction(aae, null);
+				return aae;
+			}
+			return null;
 		}
 		public EventHandlerMethod AddEventhandlerMethod(Type webClientEventHandlerType, IEvent e, UInt32 actionBranchId, Rectangle rc, Form caller)
 		{
