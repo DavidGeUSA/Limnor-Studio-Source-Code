@@ -1592,7 +1592,7 @@ namespace LimnorDesigner.EventMap
 							_data.ComponentIconList.Add(cic);
 						}
 					}
-					else
+					else if(act != null && act.ActionMethod != null)
 					{
 						DataTypePointer tp = act.ActionMethod.Owner as DataTypePointer;
 						if (tp != null)
