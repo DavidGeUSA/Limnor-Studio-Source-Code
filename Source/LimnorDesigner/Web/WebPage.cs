@@ -1128,7 +1128,7 @@ namespace Limnor.WebBuilder
 
 		[Description("Occurs prior to a document being unloaded")]
 		[WebClientMember]
-		public event SimpleCall onbeforeunload { add { } remove { } }
+		public event SimpleStringCall onbeforeunload { add { } remove { } }
 
 		[WebClientEventByServerObject]
 		[Description("Occurs on returning from a web server access")]
