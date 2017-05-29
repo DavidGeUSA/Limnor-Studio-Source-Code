@@ -13,4 +13,5 @@ using System.Text;
 namespace Limnor.WebBuilder
 {
    public delegate void SimpleCall();
+   public delegate string SimpleStringCall();
 }
