@@ -69,7 +69,14 @@ namespace LimnorDesigner.Event
 		{
 			get
 			{
-				if (!typeof(bool).Equals(base.ReturnValue.BaseClassType))
+				if (this.Event != null && string.CompareOrdinal("onbeforeunload", this.Event.Name) == 0)
+				{
+					if (!typeof(string).Equals(base.ReturnValue.BaseClassType))
+					{
+						base.ReturnValue.SetDataType(typeof(string));
+					}
+				}
+				else if (!typeof(bool).Equals(base.ReturnValue.BaseClassType))
 				{
 					base.ReturnValue.SetDataType(typeof(bool));
 				}
@@ -79,7 +86,14 @@ namespace LimnorDesigner.Event
 			{
 				if (value != null)
 				{
-					if (!typeof(bool).Equals(value.BaseClassType))
+					if (this.Event != null && string.CompareOrdinal("onbeforeunload", this.Event.Name) == 0)
+					{
+						if (!typeof(string).Equals(value.BaseClassType))
+						{
+							value.SetDataType(typeof(string));
+						}
+					}
+					else if (!typeof(bool).Equals(value.BaseClassType))
 					{
 						value.SetDataType(typeof(bool));
 					}
