@@ -973,6 +973,7 @@ namespace XmlSerializer
 							}
 							if (obj != null)
 							{
+								Form frm = null;
 								IXmlCodeReaderWriterHolder wh = obj as IXmlCodeReaderWriterHolder;
 								if (wh != null)
 								{
@@ -984,6 +985,11 @@ namespace XmlSerializer
 									if (node.ParentNode == null || node.ParentNode is XmlDocument)
 									{
 										_rootObject = obj;
+										frm = obj as Form;
+										if (frm != null)
+										{
+											frm.SuspendLayout();
+										}
 										if (designMode)
 										{
 											addObjectToMap(obj, node);
@@ -998,6 +1004,10 @@ namespace XmlSerializer
 										}
 									}
 									ReadObjectFromXmlNode(node, obj, type, parentObject);
+									if (frm != null)
+									{
+										frm.ResumeLayout(false);
+									}
 								}
 								catch (Exception err)
 								{
@@ -1206,11 +1216,18 @@ namespace XmlSerializer
 			{
 				bool isCustomProperty = (properties[0] is IIdentityByInteger);
 				logTraceIncIndent();
-				XmlNodeList propNodeList = node.SelectNodes(elementName);
+				XmlNodeList propNodeList0 = node.SelectNodes(elementName);
+				SortedDictionary<string, XmlNode> propNodeList = new SortedDictionary<string, XmlNode>();
+				foreach (XmlNode propNode in propNodeList0)
+				{
+					string key = XmlUtil.GetAttribute(propNode, "name");
+					propNodeList.Add(key, propNode);
+				}
 				SortedList<UInt32, PropertyReadOrder> sortedProperties = new SortedList<UInt32, PropertyReadOrder>();
 				UInt32 idx = 0;
-				foreach (XmlNode propNode in propNodeList)
+				foreach (KeyValuePair<string,XmlNode> kv in propNodeList)
 				{
+					XmlNode propNode = kv.Value;
 					PropertyDescriptor prop = null;
 					if (isCustomProperty)
 					{
@@ -1261,18 +1278,13 @@ namespace XmlSerializer
 						}
 					}
 				}
-				Form frm = obj as Form;
-				if (frm != null)
-				{
-					frm.SuspendLayout();
-				}
 				push(obj);
 				try
 				{
 					IEnumerator<KeyValuePair<UInt32, PropertyReadOrder>> ie = sortedProperties.GetEnumerator();
 					while (ie.MoveNext())
 					{
-						ReadProperty(ie.Current.Value.Property, ie.Current.Value.Node, obj, elementName);
+						ReadProperty(ie.Current.Value.Property, ie.Current.Value.Node, obj, (obj is Form) && string.CompareOrdinal(node.Name,"Root")==0, elementName);
 						if (VPLUtil.Shutingdown)
 						{
 							return;
@@ -1283,15 +1295,11 @@ namespace XmlSerializer
 				{
 					pop();
 				}
-				if (frm != null)
-				{
-					frm.ResumeLayout(false);
-				}
 				logTraceDecIndent();
 			}
 		}
 		private Type _creatingConverter = null;
-		public void ReadProperty(PropertyDescriptor prop, XmlNode node, object value, string elementName)
+		public void ReadProperty(PropertyDescriptor prop, XmlNode node, object value, bool isTopForm, string elementName)
 		{
 			try
 			{
