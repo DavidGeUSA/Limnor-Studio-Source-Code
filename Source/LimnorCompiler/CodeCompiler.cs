@@ -1879,6 +1879,353 @@ namespace LimnorCompiler
 				initMM.Statements.Add(ces);
 			}
 		}
+		private bool propertyHandledInInit(CodeMemberMethod initMM, string controlName, string propertyName)
+		{
+			foreach (CodeStatement st in initMM.Statements)
+			{
+				CodeAssignStatement cas = st as CodeAssignStatement;
+				if (cas != null)
+				{
+					CodeFieldReferenceExpression cfre = cas.Left as CodeFieldReferenceExpression;
+					if (cfre != null)
+					{
+						if (string.CompareOrdinal(propertyName, cfre.FieldName) == 0)
+						{
+							CodeFieldReferenceExpression ocfre = cfre.TargetObject as CodeFieldReferenceExpression;
+							if (ocfre != null)
+							{
+								if (string.CompareOrdinal(controlName, ocfre.FieldName) == 0)
+								{
+									return true;
+								}
+							}
+							else
+							{
+								CodePropertyReferenceExpression ocpre = cfre.TargetObject as CodePropertyReferenceExpression;
+								if (ocpre != null)
+								{
+									if (string.CompareOrdinal(controlName, ocpre.PropertyName) == 0)
+									{
+										return true;
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						CodePropertyReferenceExpression cpre = cas.Left as CodePropertyReferenceExpression;
+						if (cpre != null)
+						{
+							if (string.CompareOrdinal(propertyName, cpre.PropertyName) == 0)
+							{
+								CodeFieldReferenceExpression ocfre = cpre.TargetObject as CodeFieldReferenceExpression;
+								if (ocfre != null)
+								{
+									if (string.CompareOrdinal(controlName, ocfre.FieldName) == 0)
+									{
+										return true;
+									}
+								}
+								else
+								{
+									CodePropertyReferenceExpression ocpre = cpre.TargetObject as CodePropertyReferenceExpression;
+									if (ocpre != null)
+									{
+										if (string.CompareOrdinal(controlName, ocpre.PropertyName) == 0)
+										{
+											return true;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					CodeExpressionStatement ces = st as CodeExpressionStatement;
+					if (ces != null)
+					{
+						CodeMethodInvokeExpression cmie=ces.Expression as CodeMethodInvokeExpression;
+						if (cmie != null)
+						{
+							CodePropertyReferenceExpression cpre = cmie.Method.TargetObject as CodePropertyReferenceExpression;
+							if (cpre != null)
+							{
+								if (string.CompareOrdinal(propertyName, cpre.PropertyName) == 0)
+								{
+									CodeFieldReferenceExpression ocfre = cpre.TargetObject as CodeFieldReferenceExpression;
+									if (ocfre != null)
+									{
+										if (string.CompareOrdinal(controlName, ocfre.FieldName) == 0)
+										{
+											return true;
+										}
+									}
+									else
+									{
+										CodePropertyReferenceExpression ocpre = cpre.TargetObject as CodePropertyReferenceExpression;
+										if (ocpre != null)
+										{
+											if (string.CompareOrdinal(controlName, ocpre.PropertyName) == 0)
+											{
+												return true;
+											}
+										}
+									}
+								}
+							}
+							else
+							{
+								CodeFieldReferenceExpression cfre = cmie.Method.TargetObject as CodeFieldReferenceExpression;
+								if (cfre != null)
+								{
+									if (string.CompareOrdinal(propertyName, cfre.FieldName) == 0)
+									{
+										CodeFieldReferenceExpression ocfre = cfre.TargetObject as CodeFieldReferenceExpression;
+										if (ocfre != null)
+										{
+											if (string.CompareOrdinal(controlName, ocfre.FieldName) == 0)
+											{
+												return true;
+											}
+										}
+										else
+										{
+											CodePropertyReferenceExpression opre = cfre.TargetObject as CodePropertyReferenceExpression;
+											if (opre != null)
+											{
+												if (string.CompareOrdinal(controlName, opre.PropertyName) == 0)
+												{
+													return true;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
+		private bool isAssignmentForControlName(CodeAssignStatement cas, string controlName)
+		{
+			CodeFieldReferenceExpression cfre = cas.Left as CodeFieldReferenceExpression;
+			if (cfre != null)
+			{
+				CodeFieldReferenceExpression ocfre = cfre.TargetObject as CodeFieldReferenceExpression;
+				if (ocfre != null)
+				{
+					if (string.CompareOrdinal(ocfre.FieldName, controlName) == 0)
+					{
+						return true;
+					}
+				}
+				else
+				{
+					CodePropertyReferenceExpression ocpre = cfre.TargetObject as CodePropertyReferenceExpression;
+					if (ocpre != null)
+					{
+						if (string.CompareOrdinal(ocpre.PropertyName, controlName) == 0)
+						{
+							return true;
+						}
+					}
+				}
+			}
+			else
+			{
+				CodePropertyReferenceExpression cpre = cas.Left as CodePropertyReferenceExpression;
+				if (cpre != null)
+				{
+					CodeFieldReferenceExpression ocfre = cpre.TargetObject as CodeFieldReferenceExpression;
+					if (ocfre != null)
+					{
+						if (string.CompareOrdinal(ocfre.FieldName, controlName) == 0)
+						{
+							return true;
+						}
+					}
+					else
+					{
+						CodePropertyReferenceExpression ocpre = cpre.TargetObject as CodePropertyReferenceExpression;
+						if (ocpre != null)
+						{
+							if (string.CompareOrdinal(ocpre.PropertyName, controlName) == 0)
+							{
+								return true;
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
+		private int locateInitCodeStatementEnd(CodeMemberMethod initMM, string controlName)
+		{
+			bool foundControl = false;
+			int loc = initMM.Statements.Count;
+			for (int i = 0; i < initMM.Statements.Count; i++)
+			{
+				CodeAssignStatement cas = initMM.Statements[i] as CodeAssignStatement;
+				if (cas != null)
+				{
+					if (isAssignmentForControlName(cas, controlName))
+					{
+						foundControl = true;
+						loc = i + 1;
+					}
+					else
+					{
+						if (foundControl)
+							break;
+					}
+				}
+				else
+				{
+					if (foundControl)
+						break;
+				}
+			}
+			return loc;
+		}
+		private void adjustContainerControls(CodeMemberMethod initMM)
+		{
+			XmlNode nodeControls = doc.DocumentElement.SelectSingleNode("Property[@name='Controls']");
+			if (nodeControls != null)
+			{
+				XmlNodeList controlNodes = nodeControls.SelectNodes("Item");
+				foreach (XmlNode nodeC in controlNodes)
+				{
+					XmlNodeList propertyNodes = nodeC.SelectNodes("Property");
+					foreach (XmlNode nodeP in propertyNodes)
+					{
+						XmlNodeList itemNodes = nodeP.SelectNodes("Item");
+						if (itemNodes.Count > 0)
+						{
+							string propertyName = XmlUtil.GetNameAttribute(nodeP);
+							if (string.CompareOrdinal("Controls", propertyName) != 0)
+							{
+								string controlName = XmlUtil.GetNameAttribute(nodeC);
+								Control control = getControlByName(controlName);
+								if (control != null)
+								{
+									PropertyInfo pif = control.GetType().GetProperty(propertyName);
+									if (pif != null)
+									{
+										bool hasAddMethod = false;
+										MethodInfo[] mifs = pif.PropertyType.GetMethods();
+										if (mifs != null)
+										{
+											for (int i = 0; i < mifs.Length; i++)
+											{
+												if (string.CompareOrdinal(mifs[i].Name, "Add") == 0)
+												{
+													hasAddMethod = true;
+													break;
+												}
+											}
+										}
+										if (hasAddMethod)
+										{
+											if (!propertyHandledInInit(initMM, controlName, propertyName))
+											{
+												int loc = locateInitCodeStatementEnd(initMM, controlName);
+												foreach (XmlNode nodeItem in itemNodes)
+												{
+													string typestring = XmlUtil.GetAttribute(nodeItem, "type");
+													if (!string.IsNullOrEmpty(typestring))
+													{
+														Type itemType = XmlUtil.GetLibTypeAttribute(nodeItem);
+														string itemName = string.Format(CultureInfo.InvariantCulture, "{0}_{1}", typestring, Guid.NewGuid().GetHashCode().ToString("x", CultureInfo.InvariantCulture));
+														CodeVariableDeclarationStatement cvds = new CodeVariableDeclarationStatement();
+														cvds.Name = itemName;
+														if (itemType != null)
+															cvds.Type = new CodeTypeReference(itemType);
+														else
+															cvds.Type = new CodeTypeReference(typestring);
+														CodeObjectCreateExpression coce = new CodeObjectCreateExpression();
+														if (itemType != null)
+															coce.CreateType = new CodeTypeReference(itemType);
+														else
+															coce.CreateType = new CodeTypeReference(typestring);
+														cvds.InitExpression = coce;
+														initMM.Statements.Insert(loc++, new CodeCommentStatement(""));
+														initMM.Statements.Insert(loc++, new CodeCommentStatement(itemName));
+														initMM.Statements.Insert(loc++, new CodeCommentStatement(""));
+														initMM.Statements.Insert(loc++, cvds);
+														XmlNodeList itempropnodes = nodeItem.SelectNodes("Property");
+														foreach (XmlNode nodeprop in itempropnodes)
+														{
+															CodeAssignStatement cas = new CodeAssignStatement();
+															CodePropertyReferenceExpression cpre = new CodePropertyReferenceExpression();
+															cpre.PropertyName = XmlUtil.GetAttribute(nodeprop, "name");
+															CodeVariableReferenceExpression cvre = new CodeVariableReferenceExpression();
+															cvre.VariableName = itemName;
+															cpre.TargetObject = cvre;
+															//CodeFieldReferenceExpression cfre = new CodeFieldReferenceExpression();
+															//cfre.FieldName = controlName;
+															//cfre.TargetObject = new CodeThisReferenceExpression();
+															//cpre.TargetObject = cfre;
+															cas.Left = cpre;
+															List<XmlElement> propElements = new List<XmlElement>();
+															foreach (XmlNode nd in nodeprop.ChildNodes)
+															{
+																XmlElement xe = nd as XmlElement;
+																if (xe != null)
+																{
+																	propElements.Add(xe);
+																}
+															}
+															if (propElements.Count == 0)
+															{
+																cas.Right = new CodePrimitiveExpression(nodeprop.InnerText);
+																initMM.Statements.Insert(loc++, cas);
+															}
+															else if (propElements.Count == 1)
+															{
+																if (string.CompareOrdinal(propElements[0].Name, "Reference") == 0)
+																{
+																	CodeFieldReferenceExpression vcfre = new CodeFieldReferenceExpression();
+																	vcfre.FieldName = XmlUtil.GetAttribute(propElements[0], "name");
+																	vcfre.TargetObject = new CodeThisReferenceExpression();
+																	cas.Right = vcfre;
+																	initMM.Statements.Insert(loc++, cas);
+																}
+															}
+														}
+														CodeExpressionStatement ces = new CodeExpressionStatement();
+														CodeMethodInvokeExpression cmie = new CodeMethodInvokeExpression();
+														ces.Expression = cmie;
+														CodeMethodReferenceExpression cmre = new CodeMethodReferenceExpression();
+														cmie.Method = cmre;
+														cmre.MethodName = "Add";
+														CodePropertyReferenceExpression cpreV = new CodePropertyReferenceExpression();
+														cmre.TargetObject = cpreV;
+														cpreV.PropertyName = propertyName;
+														CodeFieldReferenceExpression cfreV = new CodeFieldReferenceExpression();
+														cpreV.TargetObject = cfreV;
+														cfreV.FieldName = controlName;
+														cfreV.TargetObject = new CodeThisReferenceExpression();
+														CodeVariableReferenceExpression cvreV = new CodeVariableReferenceExpression();
+														cvreV.VariableName = itemName;
+														cmie.Parameters.Add(cvreV);
+														initMM.Statements.Insert(loc++, ces);
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		private void adjustComponentInits(CodeMemberMethod initMM)
 		{
 			if (_isForm)
@@ -2369,6 +2716,7 @@ namespace LimnorCompiler
 				if (initMM != null)
 				{
 					adjustHiddenForm(initMM);
+					adjustContainerControls(initMM);
 				}
 			}
 		}
@@ -6440,22 +6788,25 @@ namespace LimnorCompiler
 			foreach (object v in _objMap.Keys)
 			{
 				IComponent ic = (IComponent)v;
-				for (int i = 0; i < td.Members.Count; i++)
+				if (ic.Site != null)
 				{
-					CodeMemberField cmf = td.Members[i] as CodeMemberField;
-					if (cmf != null)
+					for (int i = 0; i < td.Members.Count; i++)
 					{
-						if (string.CompareOrdinal(cmf.Name, ic.Site.Name) == 0)
+						CodeMemberField cmf = td.Members[i] as CodeMemberField;
+						if (cmf != null)
 						{
-							if (isStaticClass)
+							if (string.CompareOrdinal(cmf.Name, ic.Site.Name) == 0)
 							{
-								cmf.Attributes = MemberAttributes.FamilyOrAssembly | MemberAttributes.Static;
+								if (isStaticClass)
+								{
+									cmf.Attributes = MemberAttributes.FamilyOrAssembly | MemberAttributes.Static;
+								}
+								else
+								{
+									cmf.Attributes = MemberAttributes.FamilyOrAssembly;
+								}
+								break;
 							}
-							else
-							{
-								cmf.Attributes = MemberAttributes.FamilyOrAssembly;
-							}
-							break;
 						}
 					}
 				}
@@ -8141,6 +8492,21 @@ namespace LimnorCompiler
 					if (string.CompareOrdinal(mm.Name, "InitializeComponent") == 0)
 					{
 						return mm;
+					}
+				}
+			}
+			return null;
+		}
+		private Control getControlByName(string name)
+		{
+			foreach (object o in _objMap.Keys)
+			{
+				Control c = o as Control;
+				if (c != null)
+				{
+					if (string.CompareOrdinal(name, c.Name) == 0)
+					{
+						return c;
 					}
 				}
 			}
