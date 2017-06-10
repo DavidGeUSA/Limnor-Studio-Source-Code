@@ -615,7 +615,7 @@ namespace XHost
 				_dtDelImage = DateTime.Now;
 				return;
 			}
-			if (e != null && !(e.OldValue == null && e.NewValue == null))
+			//if (e != null && !(e.OldValue == null && e.NewValue == null))
 			{
 				doFlush();
 			}
@@ -1313,7 +1313,7 @@ namespace XHost
 					XmlNode nodeCurParent = nodeCurrent.ParentNode;
 					nodeCurParent.RemoveChild(nodeCurrent);
 					nodeCurrent = nodeCurParent.OwnerDocument.ImportNode(nodeToApply, true);
-					r.ReadProperty(p, nodeCurrent, obj, XmlTags.XML_PROPERTY);
+					r.ReadProperty(p, nodeCurrent, obj, false, XmlTags.XML_PROPERTY);
 				}
 			}
 		}
@@ -1333,7 +1333,7 @@ namespace XHost
 				{
 					ndToUpdate = nodeCurrent.OwnerDocument.ImportNode(ndToApply, true);
 					nodeCurrent.AppendChild(ndToUpdate);
-					r.ReadProperty(p, ndToUpdate, obj, XmlTags.XML_PROPERTY);
+					r.ReadProperty(p, ndToUpdate, obj, false, XmlTags.XML_PROPERTY);
 				}
 				else if (ndToUpdate != null && ndToApply != null)
 				{
@@ -1348,7 +1348,7 @@ namespace XHost
 							nodeCurrent.RemoveChild(ndToUpdate);
 							ndToUpdate = nodeCurrent.OwnerDocument.ImportNode(ndToApply, true);
 							nodeCurrent.AppendChild(ndToUpdate);
-							r.ReadProperty(p, ndToUpdate, obj, XmlTags.XML_PROPERTY);
+							r.ReadProperty(p, ndToUpdate, obj, false, XmlTags.XML_PROPERTY);
 						}
 					}
 				}
