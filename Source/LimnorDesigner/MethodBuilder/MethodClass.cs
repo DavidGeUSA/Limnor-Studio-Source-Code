@@ -3663,7 +3663,7 @@ namespace LimnorDesigner
 				{
 					if (string.CompareOrdinal(p.Name, "ActionList") == 0)
 					{
-						reader.ReadProperty(p, nd, this, XmlTags.XML_PROPERTY);
+						reader.ReadProperty(p, nd, this, false, XmlTags.XML_PROPERTY);
 						break;
 					}
 				}
@@ -3680,7 +3680,7 @@ namespace LimnorDesigner
 							{
 								if (string.CompareOrdinal(p.Name, "ActionList") == 0)
 								{
-									reader.ReadProperty(p, nd, eh, XmlTags.XML_PROPERTY);
+									reader.ReadProperty(p, nd, eh, false, XmlTags.XML_PROPERTY);
 									break;
 								}
 							}
