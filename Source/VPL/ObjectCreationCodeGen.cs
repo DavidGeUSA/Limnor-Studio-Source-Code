@@ -17,6 +17,7 @@ using System.Collections.Specialized;
 using System.Windows.Forms;
 using System.Globalization;
 using Limnor.WebBuilder;
+using System.IO;
 
 namespace VPL
 {
@@ -723,6 +724,23 @@ namespace VPL
 			{
 				Font f = (Font)v;
 				return new CodeObjectCreateExpression(typeof(Font), new CodePrimitiveExpression(f.FontFamily.ToString()), new CodePrimitiveExpression(f.Size));
+			}
+			if (t.Equals(typeof(Icon)))
+			{
+				Icon ic = (Icon)v;
+				using (MemoryStream ms = new MemoryStream())
+				{
+					ic.Save(ms);
+					byte[] bs = ms.ToArray();
+					CodeObjectCreateExpression coce = new CodeObjectCreateExpression();
+					coce.CreateType = new CodeTypeReference(t);
+					CodeObjectCreateExpression p1 = new CodeObjectCreateExpression();
+					coce.Parameters.Add(p1);
+					p1.CreateType = new CodeTypeReference(typeof(MemoryStream));
+					CodeExpression p2 = ObjectCreationCode(bs);
+					p1.Parameters.Add(p2);
+					return coce;
+				}
 			}
 			//use string converter ===================================
 			TypeConverter sc = TypeDescriptor.GetConverter(t);
