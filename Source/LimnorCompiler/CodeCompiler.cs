@@ -2113,108 +2113,140 @@ namespace LimnorCompiler
 								Control control = getControlByName(controlName);
 								if (control != null)
 								{
-									PropertyInfo pif = control.GetType().GetProperty(propertyName);
-									if (pif != null)
+									Type paramType = null;
+									PropertyInfo[] pifs = control.GetType().GetProperties();
+									if (pifs != null && pifs.Length > 0)
 									{
-										bool hasAddMethod = false;
-										MethodInfo[] mifs = pif.PropertyType.GetMethods();
-										if (mifs != null)
+										for (int k = 0; k < pifs.Length; k++)
 										{
-											for (int i = 0; i < mifs.Length; i++)
+											if (string.CompareOrdinal(pifs[k].Name, propertyName) == 0)
 											{
-												if (string.CompareOrdinal(mifs[i].Name, "Add") == 0)
+												MethodInfo[] mifs = pifs[k].PropertyType.GetMethods();
+												if (mifs != null)
 												{
-													hasAddMethod = true;
-													break;
+													for (int i = 0; i < mifs.Length; i++)
+													{
+														if (string.CompareOrdinal(mifs[i].Name, "Add") == 0)
+														{
+															ParameterInfo[] paramlist = mifs[i].GetParameters();
+															if (paramlist != null && paramlist.Length == 1)
+															{
+																paramType = paramlist[0].ParameterType;
+																break;
+															}
+														}
+													}
+													if (paramType != null)
+														break;
 												}
 											}
 										}
-										if (hasAddMethod)
+									}
+									if (paramType != null)
+									{
+										if (!propertyHandledInInit(initMM, controlName, propertyName))
 										{
-											if (!propertyHandledInInit(initMM, controlName, propertyName))
+											ObjectXmlReader oxr = new ObjectXmlReader();
+											int loc = locateInitCodeStatementEnd(initMM, controlName);
+											foreach (XmlNode nodeItem in itemNodes)
 											{
-												int loc = locateInitCodeStatementEnd(initMM, controlName);
-												foreach (XmlNode nodeItem in itemNodes)
+												string typestring = XmlUtil.GetAttribute(nodeItem, "type");
+												if (!string.IsNullOrEmpty(typestring))
 												{
-													string typestring = XmlUtil.GetAttribute(nodeItem, "type");
-													if (!string.IsNullOrEmpty(typestring))
+													Type itemType = XmlUtil.GetLibTypeAttribute(nodeItem);
+													string itemName = string.Format(CultureInfo.InvariantCulture, "{0}_{1}", typestring, Guid.NewGuid().GetHashCode().ToString("x", CultureInfo.InvariantCulture));
+													CodeVariableDeclarationStatement cvds = new CodeVariableDeclarationStatement();
+													cvds.Name = itemName;
+													if (itemType != null)
+														cvds.Type = new CodeTypeReference(itemType);
+													else
+														cvds.Type = new CodeTypeReference(typestring);
+													CodeObjectCreateExpression coce = new CodeObjectCreateExpression();
+													if (itemType != null)
+														coce.CreateType = new CodeTypeReference(itemType);
+													else
+														coce.CreateType = new CodeTypeReference(typestring);
+													cvds.InitExpression = coce;
+													initMM.Statements.Insert(loc++, new CodeCommentStatement(""));
+													initMM.Statements.Insert(loc++, new CodeCommentStatement(itemName));
+													initMM.Statements.Insert(loc++, new CodeCommentStatement(""));
+													initMM.Statements.Insert(loc++, cvds);
+													PropertyInfo[] propInfos;
+													if (itemType != null)
+														propInfos = itemType.GetProperties();
+													else
+														propInfos = paramType.GetProperties();
+													XmlNodeList itempropnodes = nodeItem.SelectNodes("Property");
+													foreach (XmlNode nodeprop in itempropnodes)
 													{
-														Type itemType = XmlUtil.GetLibTypeAttribute(nodeItem);
-														string itemName = string.Format(CultureInfo.InvariantCulture, "{0}_{1}", typestring, Guid.NewGuid().GetHashCode().ToString("x", CultureInfo.InvariantCulture));
-														CodeVariableDeclarationStatement cvds = new CodeVariableDeclarationStatement();
-														cvds.Name = itemName;
-														if (itemType != null)
-															cvds.Type = new CodeTypeReference(itemType);
-														else
-															cvds.Type = new CodeTypeReference(typestring);
-														CodeObjectCreateExpression coce = new CodeObjectCreateExpression();
-														if (itemType != null)
-															coce.CreateType = new CodeTypeReference(itemType);
-														else
-															coce.CreateType = new CodeTypeReference(typestring);
-														cvds.InitExpression = coce;
-														initMM.Statements.Insert(loc++, new CodeCommentStatement(""));
-														initMM.Statements.Insert(loc++, new CodeCommentStatement(itemName));
-														initMM.Statements.Insert(loc++, new CodeCommentStatement(""));
-														initMM.Statements.Insert(loc++, cvds);
-														XmlNodeList itempropnodes = nodeItem.SelectNodes("Property");
-														foreach (XmlNode nodeprop in itempropnodes)
+														PropertyInfo pif = null;
+														CodeAssignStatement cas = new CodeAssignStatement();
+														CodePropertyReferenceExpression cpre = new CodePropertyReferenceExpression();
+														cpre.PropertyName = XmlUtil.GetAttribute(nodeprop, "name");
+														CodeVariableReferenceExpression cvre = new CodeVariableReferenceExpression();
+														cvre.VariableName = itemName;
+														cpre.TargetObject = cvre;
+														cas.Left = cpre;
+														List<XmlElement> propElements = new List<XmlElement>();
+														foreach (XmlNode nd in nodeprop.ChildNodes)
 														{
-															CodeAssignStatement cas = new CodeAssignStatement();
-															CodePropertyReferenceExpression cpre = new CodePropertyReferenceExpression();
-															cpre.PropertyName = XmlUtil.GetAttribute(nodeprop, "name");
-															CodeVariableReferenceExpression cvre = new CodeVariableReferenceExpression();
-															cvre.VariableName = itemName;
-															cpre.TargetObject = cvre;
-															//CodeFieldReferenceExpression cfre = new CodeFieldReferenceExpression();
-															//cfre.FieldName = controlName;
-															//cfre.TargetObject = new CodeThisReferenceExpression();
-															//cpre.TargetObject = cfre;
-															cas.Left = cpre;
-															List<XmlElement> propElements = new List<XmlElement>();
-															foreach (XmlNode nd in nodeprop.ChildNodes)
+															XmlElement xe = nd as XmlElement;
+															if (xe != null)
 															{
-																XmlElement xe = nd as XmlElement;
-																if (xe != null)
+																propElements.Add(xe);
+															}
+														}
+														if (propElements.Count == 1 && string.CompareOrdinal(propElements[0].Name, "Reference") == 0)
+														{
+															CodeFieldReferenceExpression vcfre = new CodeFieldReferenceExpression();
+															vcfre.FieldName = XmlUtil.GetAttribute(propElements[0], "name");
+															vcfre.TargetObject = new CodeThisReferenceExpression();
+															cas.Right = vcfre;
+															initMM.Statements.Insert(loc++, cas);
+														}
+														else
+														{
+															for (int i = 0; i < propInfos.Length; i++)
+															{
+																if (string.CompareOrdinal(cpre.PropertyName, propInfos[i].Name) == 0)
 																{
-																	propElements.Add(xe);
+																	pif = propInfos[i];
+																	break;
 																}
 															}
-															if (propElements.Count == 0)
+															if (pif != null)
 															{
-																cas.Right = new CodePrimitiveExpression(nodeprop.InnerText);
+																object v = oxr.ReadValue(nodeprop, control, pif.PropertyType);
+																cas.Right = ObjectCreationCodeGen.ObjectCreationCode(v);
 																initMM.Statements.Insert(loc++, cas);
 															}
-															else if (propElements.Count == 1)
+															else
 															{
-																if (string.CompareOrdinal(propElements[0].Name, "Reference") == 0)
+																if (propElements.Count == 0)
 																{
-																	CodeFieldReferenceExpression vcfre = new CodeFieldReferenceExpression();
-																	vcfre.FieldName = XmlUtil.GetAttribute(propElements[0], "name");
-																	vcfre.TargetObject = new CodeThisReferenceExpression();
-																	cas.Right = vcfre;
+																	cas.Right = new CodePrimitiveExpression(nodeprop.InnerText);
 																	initMM.Statements.Insert(loc++, cas);
 																}
 															}
 														}
-														CodeExpressionStatement ces = new CodeExpressionStatement();
-														CodeMethodInvokeExpression cmie = new CodeMethodInvokeExpression();
-														ces.Expression = cmie;
-														CodeMethodReferenceExpression cmre = new CodeMethodReferenceExpression();
-														cmie.Method = cmre;
-														cmre.MethodName = "Add";
-														CodePropertyReferenceExpression cpreV = new CodePropertyReferenceExpression();
-														cmre.TargetObject = cpreV;
-														cpreV.PropertyName = propertyName;
-														CodeFieldReferenceExpression cfreV = new CodeFieldReferenceExpression();
-														cpreV.TargetObject = cfreV;
-														cfreV.FieldName = controlName;
-														cfreV.TargetObject = new CodeThisReferenceExpression();
-														CodeVariableReferenceExpression cvreV = new CodeVariableReferenceExpression();
-														cvreV.VariableName = itemName;
-														cmie.Parameters.Add(cvreV);
-														initMM.Statements.Insert(loc++, ces);
 													}
+													CodeExpressionStatement ces = new CodeExpressionStatement();
+													CodeMethodInvokeExpression cmie = new CodeMethodInvokeExpression();
+													ces.Expression = cmie;
+													CodeMethodReferenceExpression cmre = new CodeMethodReferenceExpression();
+													cmie.Method = cmre;
+													cmre.MethodName = "Add";
+													CodePropertyReferenceExpression cpreV = new CodePropertyReferenceExpression();
+													cmre.TargetObject = cpreV;
+													cpreV.PropertyName = propertyName;
+													CodeFieldReferenceExpression cfreV = new CodeFieldReferenceExpression();
+													cpreV.TargetObject = cfreV;
+													cfreV.FieldName = controlName;
+													cfreV.TargetObject = new CodeThisReferenceExpression();
+													CodeVariableReferenceExpression cvreV = new CodeVariableReferenceExpression();
+													cvreV.VariableName = itemName;
+													cmie.Parameters.Add(cvreV);
+													initMM.Statements.Insert(loc++, ces);
 												}
 											}
 										}
