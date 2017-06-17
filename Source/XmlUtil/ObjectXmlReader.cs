@@ -947,7 +947,10 @@ namespace XmlUtility
 					}
 					gcc = new GenericConverterContext(prop, parentObject);
 				}
-				value = converter.ConvertFromString(gcc, CultureInfo.InvariantCulture, txt);
+				if (gcc != null)
+					value = converter.ConvertFromString(gcc, CultureInfo.InvariantCulture, txt);
+				else
+					value = converter.ConvertFromInvariantString(txt);
 				return true;
 			}
 			else
@@ -1321,10 +1324,40 @@ namespace XmlUtility
 						}
 						else
 						{
+							ConstructorInfo[] cifs = t.GetConstructors();
+							if (cifs != null && cifs.Length > 0)
+							{
+								for (int i = 0; i < cifs.Length; i++)
+								{
+									bool pOK = true;
+									ParameterInfo[] pifs = cifs[i].GetParameters();
+									object[] ps = new object[pifs.Length];
+									for (int k = 0; k < pifs.Length; k++)
+									{
+										XmlNode nd = node.SelectSingleNode(string.Format(CultureInfo.InvariantCulture, "Property[@name='{0}']", pifs[k].Name));
+										if (nd != null)
+										{
+											ps[k] = ReadValue(nd, null, pifs[k].ParameterType);
+										}
+										else
+										{
+											pOK = false;
+											break;
+										}
+									}
+									if (pOK)
+									{
+										v = Activator.CreateInstance(t, ps);
+									}
+								}
+							}
 #if DEBUG
-							addErrStr(string.Format("Could not create instance {0}(). Parameterless constructor not found. \r\nXml path:{1}", t, XmlUtil.GetPath(node)));
+							if (v == null)
+							{
+								addErrStr(string.Format("Could not create instance {0}(). Parameterless constructor not found. \r\nXml path:{1}", t, XmlUtil.GetPath(node)));
+							}
 #endif
-							v = null;
+							
 						}
 					}
 				}
