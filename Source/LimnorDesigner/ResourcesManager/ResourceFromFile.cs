@@ -57,6 +57,10 @@ namespace LimnorDesigner.ResourcesManager
 		public string GetExistFilename(string languagename)
 		{
 			string f = GetResourceString(languagename);
+			if (string.IsNullOrEmpty(f))
+			{
+				f = GetResourceString(string.Empty);
+			}
 			if (!string.IsNullOrEmpty(f))
 			{
 				string folder = System.IO.Path.GetDirectoryName(f);
