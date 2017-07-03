@@ -210,6 +210,19 @@ namespace XHost
 			else
 			{
 				map = _loader.ObjectMap.GetMap(obj);
+				if (map == null)
+				{
+					IComponent ic = obj as IComponent;
+					if (ic != null && ic.Site != null)
+					{
+						object key = _loader.ObjectMap.GetObjectByName(ic.Site.Name);
+						if (key != null)
+						{
+							obj = key;
+							map = _loader.ObjectMap;
+						}
+					}
+				}
 			}
 			if (map != null)
 			{

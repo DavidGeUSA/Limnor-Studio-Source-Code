@@ -266,7 +266,10 @@ namespace XHost
 			// Only add a command if we haven't already.
 			if (FindCommand(command.CommandID) == null)
 			{
-				commands.Add(command.CommandID, command);
+				if (!commands.ContainsKey(command.CommandID))
+				{
+					commands.Add(command.CommandID, command);
+				}
 			}
 		}
 

@@ -699,14 +699,35 @@ namespace XHost
 							}
 						}
 					}
+					object obj = null;
 					if (id == 0)
 					{
 						DesignUtil.WriteToOutputWindow("id not found on deleting component {0}", e.Component.Site.Name);
+						obj = ObjectMap.GetObjectByName(e.Component.Site.Name);
+						if (obj != null)
+						{
+							id = ObjectMap.GetObjectID(obj);
+						}
 					}
 					//
-					ObjectMap.RemoveObjectFromTree(e.Component);
-					//
 					DesignUtil.RemoveComponentById(Node, id);
+					//
+					ObjectMap.RemoveObjectFromTree(e.Component);
+					if (obj != null)
+					{
+						ObjectMap.RemoveObjectFromTree(obj);
+					}
+					if (ObjectMap.ContainsKey(e.Component))
+					{
+						ObjectMap.Remove(e.Component);
+					}
+					else if (obj != null)
+					{
+						if (ObjectMap.ContainsKey(obj))
+						{
+							ObjectMap.Remove(obj);
+						}
+					}
 					if (cr != null)
 					{
 						SerializeUtil.RemoveClassRefById(Node, cr.ClassId, cr.MemberId);
