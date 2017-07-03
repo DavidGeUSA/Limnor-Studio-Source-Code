@@ -1164,6 +1164,14 @@ namespace LimnorDesigner.EventMap
 		public void OnComponentRemoved(object obj)
 		{
 			UInt32 memberId = _loader.ObjectMap.GetObjectID(obj);
+			if (memberId == 0)
+			{
+				IComponent ic = obj as IComponent;
+				if (ic != null && ic.Site != null)
+				{
+					memberId = _loader.ObjectMap.GetObjectIDbyName(ic.Site.Name);
+				}
+			}
 			if (memberId != 0)
 			{
 				foreach (Control c0 in Controls)
