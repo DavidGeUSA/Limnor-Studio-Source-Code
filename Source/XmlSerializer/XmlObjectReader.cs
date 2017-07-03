@@ -1066,6 +1066,7 @@ namespace XmlSerializer
 					}
 					else
 					{
+						bool objExists = false;
 						string name = XmlUtil.GetNameAttribute(node);
 						designMode = XmlUtil.GetAttributeBoolDefFalse(node, XmlTags.XMLATT_designMode);
 						if (designMode && _objectFactory != null)
@@ -1100,9 +1101,20 @@ namespace XmlSerializer
 										}
 									}
 								}
-
-								obj = _objectFactory.CreateInstance(designerType, name);
-								logTrace("ReadObject: design mode {0}, {1}", designerType, name);
+								if (_objMap != null)
+								{
+									obj = _objMap.GetObjectByName(name);
+								}
+								if (obj == null)
+								{
+									obj = _objectFactory.CreateInstance(designerType, name);
+									logTrace("ReadControl: design mode {0}, {1}", designerType, name);
+								}
+								else
+								{
+									objExists = true;
+									logTrace("ReadControl using existing object: design mode {0}, {1}", designerType, name);
+								}
 								IXmlNodeHolder xmlHolder = obj as IXmlNodeHolder;
 								if (xmlHolder != null)
 								{
@@ -1128,7 +1140,10 @@ namespace XmlSerializer
 							push(obj);
 							try
 							{
-								list.Add(obj);
+								if (!objExists)
+								{
+									list.Add(obj);
+								}
 								ReadObjectFromXmlNode(node, obj, type, parentObject);
 							}
 							catch

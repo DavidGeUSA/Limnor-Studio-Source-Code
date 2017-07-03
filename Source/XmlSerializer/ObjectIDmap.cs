@@ -295,6 +295,15 @@ namespace XmlSerializer
 				return id;
 			return 0;
 		}
+		public uint GetObjectIDbyName(string name)
+		{
+			object obj = GetObjectByName(name);
+			if (obj != null)
+			{
+				return GetObjectID(obj);
+			}
+			return 0;
+		}
 		public IClassRef GetClassRefById(UInt32 id)
 		{
 			object v = GetObjectByID(id);
