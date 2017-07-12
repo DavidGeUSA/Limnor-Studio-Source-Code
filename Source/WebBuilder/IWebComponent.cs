@@ -111,7 +111,7 @@ namespace Limnor.WebBuilder
 	{
 		string RuntimeID { get; }
 	}
-	public interface IWebClientControl : IWebClientComponent, IXmlNodeHolder
+	public interface IWebClientControl : IWebClientComponent, IXmlNodeHolder, IWebClientControlBase
 	{
 		EventInfo[] GetWebClientEvents(bool isStatic);
 		PropertyDescriptorCollection GetWebClientProperties(bool isStatic);

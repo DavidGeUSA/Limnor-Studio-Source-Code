@@ -31,7 +31,7 @@ namespace LimnorDatabase
 	[DesignTimeColumnsHolder]
 	[ToolboxBitmapAttribute(typeof(EasyGrid), "Resources.datagrid.bmp")]
 	[Description("This control combines EasyQuery, DataSet and DataGridView into one component")]
-	public class EasyGrid : DataGridView, IDatabaseAccess, IFieldListHolder, IReport32Usage, IMasterSource, ISourceValueEnumProvider, IDynamicMethodParameters, ICustomMethodCompiler, ICollection, IListSource, ITypedList, IBindingList, IPostDeserializeProcess, ICustomDataSource, IBindingContextHolder, IResetOnComponentChange, IDevClassReferencer, ICustomTypeDescriptor, INewObjectInit, IFieldsHolder, IMethodParameterAttributesProvider, IDataGrid
+	public class EasyGrid : DataGridView, IDatabaseAccess, IFieldListHolder, IReport32Usage, IMasterSource, ISourceValueEnumProvider, IDynamicMethodParameters, ICustomMethodCompiler, ICollection, IListSource, ITypedList, IBindingList, IPostDeserializeProcess, ICustomDataSource, IBindingContextHolder, IResetOnComponentChange, IDevClassReferencer, ICustomTypeDescriptor, INewObjectInit, IFieldsHolder, IMethodParameterAttributesProvider, IDataGrid, IControlDeserialize
 	{
 		#region fields and constructors
 		private EasyQuery _query;
@@ -64,6 +64,7 @@ namespace LimnorDatabase
 		private int _leavingIdentity;
 		//
 		private List<int> _newIdentities;
+		private List<DataGridViewColumn> _columnsCache;
 		//
 		private static void staticInit()
 		{
@@ -222,8 +223,10 @@ namespace LimnorDatabase
 
 		[Description("Occurs when the Query method fails. The ErrorMessage property gives information about why the execution failed.")]
 		public event EventHandler ExecutionError = null;
+
 		[Description("Occurs when the user select an item from a dropdown list for editing a field.")]
 		public event EventHandler Lookup;
+
 		[Description("Occurs when data are retrieved from the database")]
 		public event EventHandler DataFilled;
 
@@ -3488,7 +3491,12 @@ namespace LimnorDatabase
 		{
 			try
 			{
-				return ((IBindingList)BindSource).AddNew();
+				object v = ((IBindingList)BindSource).AddNew();
+				DataGridViewRowsAddedEventArgs e = new DataGridViewRowsAddedEventArgs(this.Rows.Count - 1, 1);
+				this.OnRowsAdded(e);
+				DataGridViewRowEventArgs e2 = new DataGridViewRowEventArgs(this.Rows[this.Rows.Count - 1]);
+				this.OnUserAddedRow(e2);
+				return v;
 			}
 			catch (Exception er)
 			{
@@ -3991,6 +3999,33 @@ namespace LimnorDatabase
 			return null;
 		}
 
+		#endregion
+		#region IControlDeserialize Members
+		[Browsable(false)]
+		[NotForProgramming]
+		public void OnDeserialized()
+		{
+			_columnsCache = new List<DataGridViewColumn>();
+			foreach (DataGridViewColumn c in this.Columns)
+			{
+				_columnsCache.Add(c);
+			}
+		}
+		[Browsable(false)]
+		[NotForProgramming]
+		public void OnAddedToControls()
+		{
+			if (this.Columns.Count == 0)
+			{
+				if (_columnsCache != null && _columnsCache.Count > 0)
+				{
+					for (int i = 0; i < _columnsCache.Count; i++)
+					{
+						this.Columns.Add(_columnsCache[i]);
+					}
+				}
+			}
+		}
 		#endregion
 	}
 	public enum EnumDataSourceType { None = 0, Database = 1, Array }

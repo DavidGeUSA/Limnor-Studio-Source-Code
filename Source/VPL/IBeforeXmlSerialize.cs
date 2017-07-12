@@ -24,4 +24,18 @@ namespace VPL
 		/// <returns>true:save; false:not save</returns>
 		bool OnBeforeItemSerialize(XmlNode node, string propertyName, object item);
 	}
+	public interface IWebClientControlBase
+	{
+	}
+	public interface IControlDeserialize
+	{
+		/// <summary>
+		/// use this event to cache properties which could be altered during adding the control to Controls
+		/// </summary>
+		void OnDeserialized();
+		/// <summary>
+		/// use this event to restore cached properties after adding the control to Controls
+		/// </summary>
+		void OnAddedToControls();
+	}
 }

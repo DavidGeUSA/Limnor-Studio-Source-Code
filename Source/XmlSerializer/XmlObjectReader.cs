@@ -53,6 +53,7 @@ namespace XmlSerializer
 		private Stack _objectStack;
 		private List<IPostRootDeserialize> _postRootDeserializers;
 		private Stack<List<IPostOwnersSerialize>> _postOwnersDeserializers;
+		private List<IControlDeserialize> _controlDeserializer;
 		//
 		static private LimnorProject _prj;
 		private Dictionary<object, Dictionary<PropertyDescriptor, List<BindingLoader>>> _bindings;
@@ -462,6 +463,7 @@ namespace XmlSerializer
 					addErrStr("object map is null when calling ReadRootObject");
 					return null;
 				}
+				_controlDeserializer = null;
 				_objectFactory = objectFactory;
 				UInt32 classId = XmlUtil.GetAttributeUInt(node, XmlTags.XMLATT_ClassID);
 				UInt32 memberId = XmlUtil.GetAttributeUInt(node, XmlTags.XMLATT_ComponentID);
@@ -478,6 +480,13 @@ namespace XmlSerializer
 				Dictionary<DataGridView, List<DataGridViewColumn>> dgvs = new Dictionary<DataGridView, List<DataGridViewColumn>>();
 				if (root != null)
 				{
+					if (_controlDeserializer != null)
+					{
+						foreach (IControlDeserialize idc in _controlDeserializer)
+						{
+							idc.OnAddedToControls();
+						}
+					}
 					IXType ix = root as IXType;
 					if (ix != null)
 					{
@@ -1142,9 +1151,37 @@ namespace XmlSerializer
 							{
 								if (!objExists)
 								{
-									list.Add(obj);
+									IWebClientControlBase iw = obj as IWebClientControlBase;
+									if (iw != null)
+									{
+										list.Add(obj);
+										objExists = true;
+									}
+									else
+									{
+										DataGridView dgv = obj as DataGridView;
+										if (dgv != null)
+										{
+											list.Add(obj);
+											objExists = true;
+										}
+									}
 								}
 								ReadObjectFromXmlNode(node, obj, type, parentObject);
+								IControlDeserialize icd = obj as IControlDeserialize;
+								if (icd != null)
+								{
+									icd.OnDeserialized();
+									if (_controlDeserializer == null)
+									{
+										_controlDeserializer = new List<IControlDeserialize>();
+									}
+									_controlDeserializer.Add(icd);
+								}
+								if (!objExists)
+								{
+									list.Add(obj);
+								}
 							}
 							catch
 							{

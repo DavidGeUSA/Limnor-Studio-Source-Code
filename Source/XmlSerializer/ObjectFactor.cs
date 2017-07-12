@@ -17,6 +17,7 @@ using VSPrj;
 using System.Windows.Forms;
 using System.IO;
 using System.Globalization;
+using System.Reflection;
 
 namespace XmlSerializer
 {
@@ -66,7 +67,6 @@ namespace XmlSerializer
 				else
 				{
 					c = _loaderHost.CreateComponent(type, name);
-					//VPLUtil.FixPropertyValues(c);
 				}
 				if (c != null)
 				{

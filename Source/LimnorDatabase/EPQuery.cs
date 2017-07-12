@@ -1904,7 +1904,7 @@ namespace LimnorDatabase
 			}
 		}
 		[Description("Cancel editing the current record")]
-		public void CancelEditCurrentRecord()
+		public bool CancelEditCurrentRecord()
 		{
 			if (_data != null && _data.Tables.Count > 0)
 			{
@@ -1914,9 +1914,11 @@ namespace LimnorDatabase
 					if (cm != null)
 					{
 						cm.CancelCurrentEdit();
+						return true;
 					}
 				}
 			}
+			return false;
 		}
 		[Description("End editing the current record")]
 		public void EndEditCurrentRecord()
