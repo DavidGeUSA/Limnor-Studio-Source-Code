@@ -24,4 +24,8 @@ namespace VPL
 		/// <returns>true:save; false:not save</returns>
 		bool OnBeforeItemSerialize(XmlNode node, string propertyName, object item);
 	}
+	public interface IWebClientControlBase
+	{
+	}
+
 }
