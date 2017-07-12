@@ -1140,11 +1140,11 @@ namespace XmlSerializer
 							push(obj);
 							try
 							{
+								ReadObjectFromXmlNode(node, obj, type, parentObject);
 								if (!objExists)
 								{
 									list.Add(obj);
 								}
-								ReadObjectFromXmlNode(node, obj, type, parentObject);
 							}
 							catch
 							{
