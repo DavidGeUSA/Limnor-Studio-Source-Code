@@ -664,114 +664,110 @@ namespace XHost
 				return;
 			}
 			LimnorContextMenuCollection.ClearMenuCollection(this.ClassID);
-			DataGridViewColumn dvc = e.Component as DataGridViewColumn;
 			if (ViewerHolder != null && !ViewerHolder.IsClosing)
 			{
-				if (dvc == null)
+				Control ctrl = e.Component as Control;
+				if (ctrl != null)
 				{
-					Control ctrl = e.Component as Control;
-					if (ctrl != null)
+					Control cpt = ctrl.Parent;
+					if (cpt != null)
 					{
-						Control cpt = ctrl.Parent;
-						if (cpt != null)
+						cpt.Controls.Remove(ctrl);
+					}
+				}
+				//
+				ViewerHolder.OnComponentRemoved(e.Component);
+				//
+				uint id = 0;
+				IClassRef cr = ObjectMap.RemoveClassRef(e.Component);
+				if (ObjectMap.ContainsKey(e.Component))
+				{
+					id = ObjectMap[e.Component];
+					ObjectMap.Remove(e.Component);
+				}
+				else
+				{
+					if (cr != null)
+					{
+						if (ObjectMap.ContainsKey(cr.ObjectInstance))
 						{
-							cpt.Controls.Remove(ctrl);
+							id = ObjectMap[cr.ObjectInstance];
+							ObjectMap.Remove(cr.ObjectInstance);
 						}
 					}
-					//
-					ViewerHolder.OnComponentRemoved(e.Component);
-					//
-					uint id = 0;
-					IClassRef cr = ObjectMap.RemoveClassRef(e.Component);
-					if (ObjectMap.ContainsKey(e.Component))
+				}
+				object obj = null;
+				if (id == 0)
+				{
+					DesignUtil.WriteToOutputWindow("id not found on deleting component {0}", e.Component.Site.Name);
+					obj = ObjectMap.GetObjectByName(e.Component.Site.Name);
+					if (obj != null)
 					{
-						id = ObjectMap[e.Component];
-						ObjectMap.Remove(e.Component);
+						id = ObjectMap.GetObjectID(obj);
+					}
+				}
+				//
+				DesignUtil.RemoveComponentById(Node, id);
+				//
+				ObjectMap.RemoveObjectFromTree(e.Component);
+				if (obj != null)
+				{
+					ObjectMap.RemoveObjectFromTree(obj);
+				}
+				if (ObjectMap.ContainsKey(e.Component))
+				{
+					ObjectMap.Remove(e.Component);
+				}
+				else if (obj != null)
+				{
+					if (ObjectMap.ContainsKey(obj))
+					{
+						ObjectMap.Remove(obj);
+					}
+				}
+				if (cr != null)
+				{
+					SerializeUtil.RemoveClassRefById(Node, cr.ClassId, cr.MemberId);
+				}
+				try
+				{
+					doFlush();
+				}
+				catch (TargetInvocationException errt)
+				{
+					TargetException te = errt.InnerException as TargetException;
+					if (te != null)
+					{
 					}
 					else
 					{
-						if (cr != null)
+						MathNode.Log(TraceLogClass.MainForm, errt);
+					}
+				}
+				catch (Exception err)
+				{
+					MathNode.Log(TraceLogClass.MainForm, err);
+				}
+				//
+				DrawingItem draw = e.Component as DrawingItem;
+				if (draw != null)
+				{
+					DrawingPage page = _rootComponent as DrawingPage;
+					if (page != null)
+					{
+						foreach (Control c in page.Controls)
 						{
-							if (ObjectMap.ContainsKey(cr.ObjectInstance))
+							IDrawDesignControl dc0 = c as IDrawDesignControl;
+							if (dc0 != null)
 							{
-								id = ObjectMap[cr.ObjectInstance];
-								ObjectMap.Remove(cr.ObjectInstance);
-							}
-						}
-					}
-					object obj = null;
-					if (id == 0)
-					{
-						DesignUtil.WriteToOutputWindow("id not found on deleting component {0}", e.Component.Site.Name);
-						obj = ObjectMap.GetObjectByName(e.Component.Site.Name);
-						if (obj != null)
-						{
-							id = ObjectMap.GetObjectID(obj);
-						}
-					}
-					//
-					DesignUtil.RemoveComponentById(Node, id);
-					//
-					ObjectMap.RemoveObjectFromTree(e.Component);
-					if (obj != null)
-					{
-						ObjectMap.RemoveObjectFromTree(obj);
-					}
-					if (ObjectMap.ContainsKey(e.Component))
-					{
-						ObjectMap.Remove(e.Component);
-					}
-					else if (obj != null)
-					{
-						if (ObjectMap.ContainsKey(obj))
-						{
-							ObjectMap.Remove(obj);
-						}
-					}
-					if (cr != null)
-					{
-						SerializeUtil.RemoveClassRefById(Node, cr.ClassId, cr.MemberId);
-					}
-					try
-					{
-						doFlush();
-					}
-					catch (TargetInvocationException errt)
-					{
-						TargetException te = errt.InnerException as TargetException;
-						if (te != null)
-						{
-						}
-						else
-						{
-							MathNode.Log(TraceLogClass.MainForm, errt);
-						}
-					}
-					catch (Exception err)
-					{
-						MathNode.Log(TraceLogClass.MainForm, err);
-					}
-					//
-					DrawingItem draw = e.Component as DrawingItem;
-					if (draw != null)
-					{
-						DrawingPage page = _rootComponent as DrawingPage;
-						if (page != null)
-						{
-							foreach (Control c in page.Controls)
-							{
-								IDrawDesignControl dc0 = c as IDrawDesignControl;
-								if (dc0 != null)
+								if (dc0.Item == draw)
 								{
-									if (dc0.Item == draw)
+									if (!dc0.Destroying)
 									{
-										if (!dc0.Destroying)
-										{
-											dc0.Destroying = true;
-											Host.DestroyComponent(c);
-										}
-										break;
+										dc0.Destroying = true;
+										Host.DestroyComponent(c);
 									}
+									break;
 								}
 							}
 						}
