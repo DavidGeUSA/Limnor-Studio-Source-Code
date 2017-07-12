@@ -310,7 +310,7 @@ namespace TraceLog
 		public string Log(Form caller, Exception e, ref bool display)
 		{
 			string s = ExceptionMessage(e);
-			if (display)
+			if (display && _showMessage)
 			{
 				Log(s);
 				dlgMessage dlg = new dlgMessage();
@@ -327,7 +327,7 @@ namespace TraceLog
 		}
 		public void Log(string message, ref bool display)
 		{
-			if (display)
+			if (display && _showMessage)
 			{
 				Log(message);
 				dlgMessage dlg = new dlgMessage();
