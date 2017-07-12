@@ -222,8 +222,10 @@ namespace LimnorDatabase
 
 		[Description("Occurs when the Query method fails. The ErrorMessage property gives information about why the execution failed.")]
 		public event EventHandler ExecutionError = null;
+
 		[Description("Occurs when the user select an item from a dropdown list for editing a field.")]
 		public event EventHandler Lookup;
+
 		[Description("Occurs when data are retrieved from the database")]
 		public event EventHandler DataFilled;
 
@@ -3488,7 +3490,12 @@ namespace LimnorDatabase
 		{
 			try
 			{
-				return ((IBindingList)BindSource).AddNew();
+				object v = ((IBindingList)BindSource).AddNew();
+				DataGridViewRowsAddedEventArgs e = new DataGridViewRowsAddedEventArgs(this.Rows.Count - 1, 1);
+				this.OnRowsAdded(e);
+				DataGridViewRowEventArgs e2 = new DataGridViewRowEventArgs(this.Rows[this.Rows.Count - 1]);
+				this.OnUserAddedRow(e2);
+				return v;
 			}
 			catch (Exception er)
 			{

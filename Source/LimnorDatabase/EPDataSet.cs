@@ -302,9 +302,22 @@ namespace LimnorDatabase
 		public event EventHandler BeforeUpdate;
 		[Description("This event occurs after executing Update action.")]
 		public event EventHandler AfterUpdate;
+
+		[Description("Occurs when a CreateNewRecord action succeeds. The property RowIndex indicates the new row.")]
+		public event EventHandler RowAdded;
+		[Description("Occurs when a CancelEditCurrentRecord action succeeds.")]
+		public event EventHandler CanceledEditCurrentRecord;
+		[Description("Occurs when a DeleteCurrentRecord action succeeds.")]
+		public event EventHandler DeletedCurrentRecord;
+		
 		[Browsable(false)]
 		[Description("This event occurs when the row count changed from 0 to non-0 or from non-0 to 0.")]
 		public event EventHandler IsEmptyChanged;
+
+
+		#endregion
+
+		#region Web Events
 		//
 		[WebServerMember]
 		[Description("This event is for web applications. This event occurs after fetching data from the database for each row feteched. This event only occurs if property FireEventOnFetchData is true.")]
@@ -1399,6 +1412,10 @@ namespace LimnorDatabase
 				_qry.ResetCanChangeDataSet(false);
 				_qry.CreateNewRecord(values);
 				setupBindingSource();
+				if (RowAdded != null)
+				{
+					RowAdded(this, EventArgs.Empty);
+				}
 				return true;
 			}
 			return false;
@@ -1697,66 +1714,7 @@ namespace LimnorDatabase
 
 		#endregion
 
-		#region Methods
-		[Description("Set the full file path for the log file for database activities. ")]
-		public static void SetLogFilePath(string logFileName)
-		{
-			EasyQuery.SetLogFilePath(logFileName);
-		}
-		[NotForProgramming]
-		[Browsable(false)]
-		public void SetKeyFieldCode(Dictionary<string, string> fc)
-		{
-			_keyfieldcode = fc;
-		}
-		[NotForProgramming]
-		[Browsable(false)]
-		public void SetMasterFunction(string name)
-		{
-			_masterFunction = name;
-		}
-		[NotForProgramming]
-		[Browsable(false)]
-		public void CreateDataTable()
-		{
-			if (_qry != null)
-			{
-				FieldList fl = _qry.Fields;
-				if (fl != null && fl.Count > 0)
-				{
-					DataTable tbl = this.DataTable;
-					if (tbl == null)
-					{
-						tbl = new DataTable(this.TableName);
-						this.Tables.Add(tbl);
-						for (int i = 0; i < fl.Count; i++)
-						{
-							tbl.Columns.Add(fl[i].CreateDataColumn());
-						}
-					}
-				}
-			}
-		}
-		[NotForProgramming]
-		[Browsable(false)]
-		public void OutputProcessMessages(HttpResponse response)
-		{
-			StringCollection sc = ProcessMessages;
-			foreach (string s in sc)
-			{
-				if (!string.IsNullOrEmpty(s))
-				{
-					response.Write(s);
-					response.Write("<br>");
-				}
-			}
-		}
-		[NotForProgramming]
-		[Browsable(false)]
-		public string GetConnectionCodeName()
-		{
-			return ServerCodeutility.GetPhpMySqlConnectionName(this.ConnectionID);
-		}
+		#region Web Client Methods
 		[WebClientOnly]
 		[Description("Save all records to HTML5 storage. These records can be loaded by calling LoadFromHTML5Storage. Use dataName to uniquely identify the data in HTML5 storage. Use only alphanumeric letters in dataName")]
 		[WebClientMember]
@@ -1792,22 +1750,6 @@ namespace LimnorDatabase
 		[Description("This object may have a master if properties Master and MasterKeyColumns are set properly. This method re-fetches rows from the database for the current master record.")]
 		public void RefetchRowsForCurrentMaster()
 		{
-		}
-		public void SetRandomValuesToFields()
-		{
-			if (_bindingManager != null)
-			{
-				_bindingManager.EndCurrentEdit();
-			}
-			_qry.SetRandomValuesToFields();
-		}
-		public void SetRandomFieldValue(string fieldName)
-		{
-			if (_bindingManager != null)
-			{
-				_bindingManager.EndCurrentEdit();
-			}
-			_qry.SetRandomFieldValue(fieldName);
 		}
 		[WebClientMember]
 		[Description("Set field value for the current record")]
@@ -1881,12 +1823,6 @@ namespace LimnorDatabase
 		{
 			return false;
 		}
-		[Description("Create a data binding object. It is to be added to DataBindings property via DataBindings.Add(obj) method, where obj is created by this method.")]
-		public Binding CreateDataBinding(string bindToPropertyName, string sourceFieldName)
-		{
-			return new Binding(bindToPropertyName, DataBindingSource, sourceFieldName, true);
-		}
-
 		[WebClientMember]
 		[Description("Set the next record of the first table in DataStorage as the current record")]
 		public bool MoveNext()
@@ -1922,25 +1858,11 @@ namespace LimnorDatabase
 			}
 			return false;
 		}
-
-		[Browsable(false)]
-		public DataRow CurrentDataRow
-		{
-			get
-			{
-				return _qry.CurrentDataRow;
-			}
-		}
 		[WebClientMember]
 		[Description("Go through each row and test the condition. The first row making the condition match becomes the current row.")]
 		public bool Search(bool condition)
 		{
 			return false;
-		}
-		[Description("Get information about this query")]
-		public string GetQueryInfo()
-		{
-			return _qry.GetQueryInfo();
 		}
 		[WebClientOnly]
 		[WebClientMember]
@@ -1959,22 +1881,14 @@ namespace LimnorDatabase
 		[Description("Delete the current record")]
 		public bool DeleteCurrentRecord()
 		{
-			return _qry.DeleteCurrentRecord();
-		}
-		[Description("Begin editing the current record")]
-		public void BeginEditCurrentRecord()
-		{
-			_qry.BeginEditCurrentRecord();
-		}
-		[Description("Cancel editing the current record")]
-		public void CancelEditCurrentRecord()
-		{
-			_qry.CancelEditCurrentRecord();
-		}
-		[Description("End editing the current record")]
-		public void EndEditCurrentRecord()
-		{
-			_qry.EndEditCurrentRecord();
+			if (_qry.DeleteCurrentRecord())
+			{
+				if (DeletedCurrentRecord != null)
+				{
+					DeletedCurrentRecord(this, EventArgs.Empty);
+				}
+			}
+			return false;
 		}
 		[WebServerMember]
 		[Description("Save changed data back to the database")]
@@ -2015,6 +1929,136 @@ namespace LimnorDatabase
 		public object GetFieldValueEx(int rowNumber, string fieldName)
 		{
 			return _qry.GetColumnValueEx(rowNumber, fieldName);
+		}
+		[WebClientMember]
+		[Description("Clears the DataSet of any data by removing all rows in all tables.")]
+		public new void Clear()
+		{
+			base.Clear();
+		}
+
+		#endregion
+
+		#region Static Methods
+		[Description("Set the full file path for the log file for database activities. ")]
+		public static void SetLogFilePath(string logFileName)
+		{
+			EasyQuery.SetLogFilePath(logFileName);
+		}
+		#endregion
+
+		#region Internal Methods
+		[NotForProgramming]
+		[Browsable(false)]
+		public void SetKeyFieldCode(Dictionary<string, string> fc)
+		{
+			_keyfieldcode = fc;
+		}
+		[NotForProgramming]
+		[Browsable(false)]
+		public void SetMasterFunction(string name)
+		{
+			_masterFunction = name;
+		}
+		[NotForProgramming]
+		[Browsable(false)]
+		public void CreateDataTable()
+		{
+			if (_qry != null)
+			{
+				FieldList fl = _qry.Fields;
+				if (fl != null && fl.Count > 0)
+				{
+					DataTable tbl = this.DataTable;
+					if (tbl == null)
+					{
+						tbl = new DataTable(this.TableName);
+						this.Tables.Add(tbl);
+						for (int i = 0; i < fl.Count; i++)
+						{
+							tbl.Columns.Add(fl[i].CreateDataColumn());
+						}
+					}
+				}
+			}
+		}
+		[NotForProgramming]
+		[Browsable(false)]
+		public void OutputProcessMessages(HttpResponse response)
+		{
+			StringCollection sc = ProcessMessages;
+			foreach (string s in sc)
+			{
+				if (!string.IsNullOrEmpty(s))
+				{
+					response.Write(s);
+					response.Write("<br>");
+				}
+			}
+		}
+		[NotForProgramming]
+		[Browsable(false)]
+		public string GetConnectionCodeName()
+		{
+			return ServerCodeutility.GetPhpMySqlConnectionName(this.ConnectionID);
+		}
+		#endregion
+
+		#region Desktop methods
+		public void SetRandomValuesToFields()
+		{
+			if (_bindingManager != null)
+			{
+				_bindingManager.EndCurrentEdit();
+			}
+			_qry.SetRandomValuesToFields();
+		}
+		public void SetRandomFieldValue(string fieldName)
+		{
+			if (_bindingManager != null)
+			{
+				_bindingManager.EndCurrentEdit();
+			}
+			_qry.SetRandomFieldValue(fieldName);
+		}
+		[Description("Create a data binding object. It is to be added to DataBindings property via DataBindings.Add(obj) method, where obj is created by this method.")]
+		public Binding CreateDataBinding(string bindToPropertyName, string sourceFieldName)
+		{
+			return new Binding(bindToPropertyName, DataBindingSource, sourceFieldName, true);
+		}
+		[Browsable(false)]
+		public DataRow CurrentDataRow
+		{
+			get
+			{
+				return _qry.CurrentDataRow;
+			}
+		}
+		[Description("Get information about this query")]
+		public string GetQueryInfo()
+		{
+			return _qry.GetQueryInfo();
+		}
+		[Description("Begin editing the current record")]
+		public void BeginEditCurrentRecord()
+		{
+			_qry.BeginEditCurrentRecord();
+		}
+		[Description("Cancel editing the current record")]
+		public void CancelEditCurrentRecord()
+		{
+			if (_qry.CancelEditCurrentRecord())
+			{
+				if (CanceledEditCurrentRecord != null)
+				{
+					CanceledEditCurrentRecord(this, EventArgs.Empty);
+				}
+			}
+		}
+		[Description("End editing the current record")]
+		public void EndEditCurrentRecord()
+		{
+			_qry.EndEditCurrentRecord();
 		}
 		[Description("Set credential for accessing the database. It should be called at the event of BeforePrepareCommands and before event BeforeQuery.")]
 		public void SetCredential(string user, string userPassword, string databasePassword)
@@ -2058,12 +2102,6 @@ namespace LimnorDatabase
 		public void SetParameterValue(string parameterName, object value)
 		{
 			_qry.SetParameterValue(parameterName, value);
-		}
-		[WebClientMember]
-		[Description("Clears the DataSet of any data by removing all rows in all tables.")]
-		public new void Clear()
-		{
-			base.Clear();
 		}
 		#endregion
 
