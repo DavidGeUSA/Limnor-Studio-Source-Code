@@ -24,6 +24,7 @@ using System.Xml;
 using XmlUtility;
 using System.Media;
 using VSPrj;
+using TraceLog;
 
 namespace LimnorVOB
 {
@@ -69,6 +70,8 @@ namespace LimnorVOB
 			buttonCancel.Enabled = true;
 			_cancel = false;
 			_generic = new BuildResult("Batch Builder");
+			bool b = TraceLogClass.TraceLog.ShowMessageBox;
+			TraceLogClass.TraceLog.ShowMessageBox = false;
 			try
 			{
 				string bf = txtBatch.Text.Trim();
@@ -98,6 +101,10 @@ namespace LimnorVOB
 			catch (Exception err)
 			{
 				_generic.SetError(err.Message);
+			}
+			finally
+			{
+				TraceLogClass.TraceLog.ShowMessageBox = b;
 			}
 			_generic.End();
 
