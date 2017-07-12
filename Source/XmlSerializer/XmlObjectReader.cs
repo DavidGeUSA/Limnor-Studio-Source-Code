@@ -1140,6 +1140,24 @@ namespace XmlSerializer
 							push(obj);
 							try
 							{
+								if (!objExists)
+								{
+									IWebClientControlBase iw = obj as IWebClientControlBase;
+									if (iw != null)
+									{
+										list.Add(obj);
+										objExists = true;
+									}
+									else
+									{
+										DataGridView dgv = obj as DataGridView;
+										if (dgv != null)
+										{
+											list.Add(obj);
+											objExists = true;
+										}
+									}
+								}
 								ReadObjectFromXmlNode(node, obj, type, parentObject);
 								if (!objExists)
 								{
