@@ -307,6 +307,9 @@ namespace LimnorDatabase
 		public event EventHandler RowAdded;
 		[Description("Occurs when a CancelEditCurrentRecord action succeeds.")]
 		public event EventHandler CanceledEditCurrentRecord;
+
+		[Description("Occurs before a DeleteCurrentRecord action is executed.")]
+		public event EventHandlerWithCancel DeletingCurrentRecord;
 		[Description("Occurs when a DeleteCurrentRecord action succeeds.")]
 		public event EventHandler DeletedCurrentRecord;
 		
@@ -1881,12 +1884,22 @@ namespace LimnorDatabase
 		[Description("Delete the current record")]
 		public bool DeleteCurrentRecord()
 		{
+			if (DeletingCurrentRecord != null)
+			{
+				CancelEventArgs e = new CancelEventArgs(false);
+				DeletingCurrentRecord(this, e);
+				if (e.Cancel)
+				{
+					return false;
+				}
+			}
 			if (_qry.DeleteCurrentRecord())
 			{
 				if (DeletedCurrentRecord != null)
 				{
 					DeletedCurrentRecord(this, EventArgs.Empty);
 				}
+				return true;
 			}
 			return false;
 		}
