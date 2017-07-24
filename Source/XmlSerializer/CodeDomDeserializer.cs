@@ -162,11 +162,11 @@ namespace XmlSerializer
 						{
 							return null;
 						}
-						Type t = owner.GetType();
-						if (string.CompareOrdinal(t.Name, "DesignerControlCollection") == 0)
-						{
-							return null;
-						}
+						//Type t = owner.GetType();
+						//if (string.CompareOrdinal(t.Name, "DesignerControlCollection") == 0)
+						//{
+						//	return null;
+						//}
 					}
 				}
 				Type[] ps = null;
@@ -182,6 +182,36 @@ namespace XmlSerializer
 						if (vs[i] != null)
 						{
 							ps[i] = vs[i].GetType();
+						}
+					}
+					if (vs.Length == 1)
+					{
+						if (string.CompareOrdinal(code.Method.MethodName, "Add") == 0)
+						{
+							Control c0 = vs[0] as Control;
+							if (c0 != null)
+							{
+								Type t = owner.GetType();
+								if (string.CompareOrdinal(t.Name, "DesignerControlCollection") == 0)
+								{
+									ICollection ics = owner as ICollection;
+									IEnumerator ie = ics.GetEnumerator();
+									if (ie != null)
+									{
+										while (ie.MoveNext())
+										{
+											Control c1 = ie.Current as Control;
+											if (c1 != null)
+											{
+												if (string.CompareOrdinal(c1.Name, c0.Name) == 0)
+												{
+													return null;
+												}
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}

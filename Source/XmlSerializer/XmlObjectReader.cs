@@ -58,7 +58,7 @@ namespace XmlSerializer
 		static private LimnorProject _prj;
 		private Dictionary<object, Dictionary<PropertyDescriptor, List<BindingLoader>>> _bindings;
 		private Dictionary<object, Dictionary<PropertyDescriptor, string>> _references;
-
+		
 		private Dictionary<PropertyDescriptor, object> _propertiesNotSet;
 		private List<CodeStatementCollectionDeserializer> _customSerilizers;
 		private IObjectFactory _objectFactory;
@@ -2880,5 +2880,24 @@ namespace XmlSerializer
 				}
 			}
 		}
+	}
+	/// <summary>
+	/// it remembers components recorded in Object nodes. 
+	/// when a code dom deserializer references a component, if the component name does not exist in the object map then use the type recorded here to create an instance
+	/// </summary>
+	class ComponentRec
+	{
+		private Type _type;
+		private string _name;
+		private UInt32 _id;
+		public ComponentRec(Type type, string name, UInt32 id)
+		{
+			_type = type;
+			_name = name;
+			_id = id;
+		}
+		public Type ObjectType { get { return _type; } }
+		public string Name { get { return _name; } }
+		public UInt32 ID { get { return _id; } }
 	}
 }
