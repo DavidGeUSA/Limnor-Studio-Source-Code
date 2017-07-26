@@ -249,6 +249,10 @@ namespace XmlSerializer
 					break;
 			}
 			Add(obj, id);
+			if (_treeRoot != null)
+			{
+				_treeRoot.OnAddedObject(obj);
+			}
 			return id;
 		}
 		public object GetRootObject()
