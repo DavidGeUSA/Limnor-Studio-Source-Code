@@ -249,55 +249,6 @@ namespace XmlSerializer
 				}
 			}
 
-			while (menuItems.Count > 0)
-			{
-				List<ToolStripItem> menuItems0 = new List<ToolStripItem>();
-				foreach (ToolStripItem mi in menuItems)
-				{
-					ToolStrip ts = GetTopMenuOwner(mi);
-					if (ts == null)
-					{
-						top.Add(new Tree(top, mi));
-					}
-					else
-					{
-						Tree t = top.GetChildByOwner(ts);
-						if (t == null)
-						{
-							top.Add(new Tree(top, mi));
-						}
-						else
-						{
-							if (mi.OwnerItem == null)
-							{
-								t.Add(new Tree(t, mi));
-							}
-							else
-							{
-								t = top.SearchChildByOwner(mi.OwnerItem);
-								if (t != null)
-								{
-									t.Add(new Tree(t, mi));
-								}
-								else
-								{
-									menuItems0.Add(mi);
-								}
-							}
-						}
-					}
-				}
-				if (menuItems.Count == menuItems0.Count)
-				{
-					foreach (ToolStripItem mi in menuItems0)
-					{
-						top.Add(new Tree(top, mi));
-					}
-					break;
-				}
-				menuItems = menuItems0;
-			}
-
 			while (ctrls.Count > 0)
 			{
 				List<Control> ctrls0 = new List<Control>();
@@ -349,7 +300,54 @@ namespace XmlSerializer
 					}
 				}
 			}
-
+			while (menuItems.Count > 0)
+			{
+				List<ToolStripItem> menuItems0 = new List<ToolStripItem>();
+				foreach (ToolStripItem mi in menuItems)
+				{
+					ToolStrip ts = GetTopMenuOwner(mi);
+					if (ts == null)
+					{
+						top.Add(new Tree(top, mi));
+					}
+					else
+					{
+						Tree t = top.GetChildByOwner(ts);
+						if (t == null)
+						{
+							top.Add(new Tree(top, mi));
+						}
+						else
+						{
+							if (mi.OwnerItem == null)
+							{
+								t.Add(new Tree(t, mi));
+							}
+							else
+							{
+								t = top.SearchChildByOwner(mi.OwnerItem);
+								if (t != null)
+								{
+									t.Add(new Tree(t, mi));
+								}
+								else
+								{
+									menuItems0.Add(mi);
+								}
+							}
+						}
+					}
+				}
+				if (menuItems.Count == menuItems0.Count)
+				{
+					foreach (ToolStripItem mi in menuItems0)
+					{
+						top.Add(new Tree(top, mi));
+					}
+					break;
+				}
+				menuItems = menuItems0;
+			}
 			if (dcolumns.Count > 0)
 			{
 				foreach (DataGridViewColumn dc in dcolumns)
@@ -513,6 +511,42 @@ namespace XmlSerializer
 					Tree oldOwner = RemoveTree(sender);
 					Tree newOwner = AddChild(c);
 					OwnerChanged(sender, new EventArgsOwnerChanged(oldOwner.Owner, newOwner.Owner));
+				}
+			}
+		}
+		public void OnAddedObject(object v)
+		{
+			object parent = null;
+			ToolStripItem mi = v as ToolStripItem;
+			if (mi != null)
+			{
+				parent = mi.Owner;
+			}
+			else
+			{
+				DataGridViewColumn dgc = v as DataGridViewColumn;
+				if (dgc != null)
+				{
+					parent = dgc.DataGridView;
+				}
+				else
+				{
+					Control ctrl = v as Control;
+					if (ctrl != null)
+					{
+						parent = ctrl.Parent;
+					}
+				}
+			}
+			if (parent != null)
+			{
+				Tree t = SearchChildByOwner(parent);
+				if (t != null)
+				{
+					if (t.GetChildByOwner(v) == null)
+					{
+						t.Add(new Tree(t, v));
+					}
 				}
 			}
 		}
