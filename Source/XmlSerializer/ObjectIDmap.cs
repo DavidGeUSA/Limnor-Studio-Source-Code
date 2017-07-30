@@ -400,6 +400,18 @@ namespace XmlSerializer
 					}
 				}
 			}
+			IComponent ic1 = v1 as IComponent;
+			if (ic1 != null && ic1.Site != null)
+			{
+				IComponent ic2 = v2 as IComponent;
+				if (ic2 != null && ic2.Site != null)
+				{
+					if (string.CompareOrdinal(ic1.Site.Name, ic2.Site.Name) == 0)
+					{
+						return true;
+					}
+				}
+			}
 			return v1 == v2;
 		}
 		public void SetClassRefMap(object obj, IClassRef classRef)

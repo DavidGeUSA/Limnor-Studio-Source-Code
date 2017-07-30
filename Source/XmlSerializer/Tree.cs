@@ -503,14 +503,40 @@ namespace XmlSerializer
 		}
 		public void OnControlParentChanged(object sender, EventArgs e)
 		{
-			if (OwnerChanged != null)
+			if (OwnerChanged != null && _map != null)
 			{
 				Control c = sender as Control;
 				if (c != null && c.Parent != null)
 				{
-					Tree oldOwner = RemoveTree(sender);
-					Tree newOwner = AddChild(c);
-					OwnerChanged(sender, new EventArgsOwnerChanged(oldOwner.Owner, newOwner.Owner));
+					//Tree oldOwner = RemoveTree(sender);
+					//Tree newOwner = AddChild(c);
+					//OwnerChanged(sender, new EventArgsOwnerChanged(oldOwner.Owner, newOwner.Owner));
+					Tree oldOwner = SearchParentByOwner(c);
+					if (oldOwner != null)
+					{
+						Tree newOwner = SearchChildByOwner(c.Parent);
+						if (newOwner != null)
+						{
+							if (newOwner != oldOwner)
+							{
+								Tree t0 = null;
+								foreach (Tree t in oldOwner)
+								{
+									if (_map.IsSameInstance(t.Owner, sender))
+									{
+										t0 = t;
+										break;
+									}
+								}
+								if (t0 != null)
+								{
+									oldOwner.Remove(t0);
+									newOwner.Add(t0);
+									OwnerChanged(sender, new EventArgsOwnerChanged(oldOwner.Owner, newOwner.Owner));
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -520,7 +546,7 @@ namespace XmlSerializer
 			ToolStripItem mi = v as ToolStripItem;
 			if (mi != null)
 			{
-				parent = mi.Owner;
+				parent = mi.OwnerItem;
 			}
 			else
 			{

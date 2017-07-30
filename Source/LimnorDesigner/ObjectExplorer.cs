@@ -12020,7 +12020,7 @@ namespace LimnorDesigner
 		/// <param name="e"></param>
 		private void TreeRoot_OwnerChanged(object sender, EventArgsOwnerChanged e)
 		{
-			if (this.NextLevelLoaded)
+			if (this.NextLevelLoaded && e.NewOwner != e.OldOwner)
 			{
 				//remove from the old parent
 				TreeNodeClass tncc = this.FindComponentNode(e.OldOwner);
