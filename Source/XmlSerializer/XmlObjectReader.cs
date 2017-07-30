@@ -2186,7 +2186,10 @@ namespace XmlSerializer
 						}
 						if (prop != null)
 						{
-							propValue.Add(prop, sref);
+							if (!propValue.ContainsKey(prop))
+							{
+								propValue.Add(prop, sref);
+							}
 						}
 						value = null;
 						return false; //do not set the value
