@@ -89,6 +89,22 @@ namespace XmlSerializer
 			_onReadRoot = onReadRoot;
 			_onRootObjectCreated = onRootCreated;
 		}
+		private object createHostedComponent(Type type, string name)
+		{
+			if (_objMap != null)
+			{
+				object v = _objMap.GetObjectByName(name);
+				if (v != null)
+				{
+					return v;
+				}
+			}
+			if (_objectFactory != null)
+			{
+				return _objectFactory.CreateInstance(type, name);
+			}
+			return null;
+		}
 		public Stack ObjectStack { get { return _objectStack; } }
 		public IList<IPostRootDeserialize> PostRootDeserializers { get { return _postRootDeserializers; } }
 		public void Reset()
@@ -957,12 +973,12 @@ namespace XmlSerializer
 										}
 										else
 										{
-											obj = _objectFactory.CreateInstance(designerType, name);
+											obj = createHostedComponent(designerType, name);
 										}
 									}
 									else
 									{
-										obj = _objectFactory.CreateInstance(designerType, name);
+										obj = createHostedComponent(designerType, name);
 									}
 									logTrace("ReadObject: design mode {0}, {1}", designerType, name);
 									IXmlNodeHolder xmlHolder = obj as IXmlNodeHolder;
