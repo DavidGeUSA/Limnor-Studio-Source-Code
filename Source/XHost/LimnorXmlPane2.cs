@@ -125,30 +125,50 @@ namespace XHost
 					pg.PropertyValueChanged += new PropertyValueChangedEventHandler(pg_PropertyValueChanged);
 					pg.SelectedObjectsChanged += new EventHandler(pg_SelectedObjectsChanged);
 					pg.SelectedGridItemChanged += new SelectedGridItemChangedEventHandler(pg_SelectedGridItemChanged);
-					pg.PreviewKeyDown += pg_PreviewKeyDown;
-					pg.KeyDown += pg_KeyDown;
+					Form f = pg.FindForm();
+					if (f != null)
+					{
+						f.KeyDown += f_KeyDown;
+						f.KeyPreview = true;
+					}
 					_vsPropertyGridHooked = true;
 				}
 			}
 		}
 
-		void pg_KeyDown(object sender, KeyEventArgs e)
+		void f_KeyDown(object sender, KeyEventArgs e)
 		{
-			if (e.KeyCode == Keys.Delete)
+			if (_isImageProp)
 			{
+				if (e.KeyCode == Keys.Back)
+				{
+					if (imgProp != null)
+					{
+						PropertyGrid pg = hookVsPropertyGrid();
+						if (pg != null)
+						{
+							if (pg.SelectedObject != null)
+							{
+								try
+								{
+									imgProp.ResetValue(pg.SelectedObject);
+								}
+								catch (Exception err)
+								{
+									MessageBox.Show(this.FindForm(), string.Format(CultureInfo.InvariantCulture, "Error removing image. {0}", err.Message), "Reset image", MessageBoxButtons.OK, MessageBoxIcon.Error);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 
-		void pg_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
-		{
-			if (e.KeyCode == Keys.Delete)
-			{
-			}
-		}
 		#endregion
 
 		#region private methods
 		private bool _isImageProp = false;
+		private PropertyDescriptor imgProp = null;
 		void pg_SelectedGridItemChanged(object sender, SelectedGridItemChangedEventArgs e)
 		{
 			_isImageProp = false;
@@ -157,6 +177,7 @@ namespace XHost
 				if (typeof(Image).IsAssignableFrom(e.NewSelection.PropertyDescriptor.PropertyType))
 				{
 					_isImageProp = true;
+					imgProp = e.NewSelection.PropertyDescriptor;
 				}
 			}
 		}
