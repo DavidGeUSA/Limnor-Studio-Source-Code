@@ -1878,7 +1878,13 @@ namespace LimnorDatabase
 		[Description("Add an empty new record. The record has not been saved to the database. An Update action should be used to save the record to the database.")]
 		public void AddNewRecord()
 		{
-			_qry.AddNewRecord();
+			if (_qry.AddNewRecord())
+			{
+				if (RowAdded != null)
+				{
+					RowAdded(this, EventArgs.Empty);
+				}
+			}
 		}
 		[WebClientMember]
 		[Description("Delete the current record")]

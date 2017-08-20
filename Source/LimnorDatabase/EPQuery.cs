@@ -1853,7 +1853,7 @@ namespace LimnorDatabase
 			return sb.ToString();
 		}
 		[Description("Add a new empty record")]
-		public void AddNewRecord()
+		public bool AddNewRecord()
 		{
 			if (_data != null && _data.Tables.Count > 0)
 			{
@@ -1863,9 +1863,11 @@ namespace LimnorDatabase
 					if (cm != null)
 					{
 						cm.AddNew();
+						return true;
 					}
 				}
 			}
+			return false;
 		}
 		[Description("Delete the current record")]
 		public bool DeleteCurrentRecord()

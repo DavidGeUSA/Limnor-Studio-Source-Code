@@ -20,7 +20,7 @@ using XmlUtility;
 
 namespace LimnorDatabase
 {
-	[ToolboxBitmapAttribute(typeof(EasyGrid), "Resources.dgvEx.bmp")]
+	[ToolboxBitmapAttribute(typeof(DataGridViewEx), "Resources.dgvEx.bmp")]
 	public class DataGridViewEx : DataGridView, IDataGrid, IDevClassReferencer, IPostDeserializeProcess, IPostXmlNodeSerialize
 	{
 		public DataGridViewEx()
@@ -61,6 +61,8 @@ namespace LimnorDatabase
 			return flds;
 		}
 		#endregion
+
+		#region Columns preserve
 		[NotForProgramming]
 		[Browsable(false)]
 		public void PreserveColumns()
@@ -102,6 +104,7 @@ namespace LimnorDatabase
 		{
 			OnDeserialize(null);
 		}
+		#endregion
 		#region IDataGrid members
 		[NotForProgramming]
 		[Browsable(false)]
