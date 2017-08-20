@@ -230,7 +230,6 @@ namespace XmlSerializer
 					if (c != null)
 					{
 						c.ParentChanged += new EventHandler(top.OnControlParentChanged);
-
 						if (c.Parent != null && c.Parent != rc)
 						{
 							ctrls.Add(c);
@@ -248,7 +247,6 @@ namespace XmlSerializer
 					}
 				}
 			}
-
 			while (ctrls.Count > 0)
 			{
 				List<Control> ctrls0 = new List<Control>();
@@ -360,6 +358,27 @@ namespace XmlSerializer
 					else
 					{
 						t.Add(new Tree(t, dc));
+					}
+				}
+			}
+			foreach(object v0 in map.Keys)
+			{
+				DataGridView dgv = v0 as DataGridView;
+				if (dgv != null)
+				{
+					Tree t = top.GetChildByOwner(dgv);
+					if (t != null)
+					{
+						if (t.Count == 0)
+						{
+							if (dgv.Columns.Count > 0)
+							{
+								foreach (DataGridViewColumn c in dgv.Columns)
+								{
+									t.Add(new Tree(t, c));
+								}
+							}
+						}
 					}
 				}
 			}

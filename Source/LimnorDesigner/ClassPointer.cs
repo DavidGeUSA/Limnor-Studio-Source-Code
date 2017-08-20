@@ -9178,7 +9178,14 @@ namespace LimnorDesigner
 			MemberComponentId c = objectPointer as MemberComponentId;
 			if (c != null)
 			{
-				return (c.WholeId == this.WholeId);
+				if (c.MemberId != 0 && this.MemberId != 0)
+				{
+					return (c.WholeId == this.WholeId);
+				}
+				else
+				{
+					return string.CompareOrdinal(c.Name, this.Name) == 0;
+				}
 			}
 			return false;
 		}
