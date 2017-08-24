@@ -2262,7 +2262,7 @@ namespace XHost
 		}
 		public MemberComponentId GetMemberId(object obj)
 		{
-			MemberComponentId member = MemberComponentId.CreateMemberComponentId(GetRootId(), obj, this.ObjectMap.GetObjectID(obj));
+			MemberComponentId member = MemberComponentId.CreateMemberComponentId(GetRootId(), obj, this.ObjectMap.GetObjectID(obj), null);
 			return member;
 		}
 		#endregion

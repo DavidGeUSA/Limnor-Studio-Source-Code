@@ -372,6 +372,10 @@ namespace LimnorDesigner
 					}
 				}
 			}
+			catch(Exception err)
+			{
+				DesignUtil.WriteToOutputWindowAndLog("Cannot remove web page cache. {0}", err.Message);
+			}
 			finally
 			{
 				if (!bOK)
@@ -2670,7 +2674,7 @@ namespace LimnorDesigner
 					}
 					else
 					{
-						o = MemberComponentId.CreateMemberComponentId(rt, obj, memberId);
+						o = MemberComponentId.CreateMemberComponentId(rt, obj, memberId, null);
 					}
 				}
 			}
@@ -2713,7 +2717,7 @@ namespace LimnorDesigner
 				}
 				else
 				{
-					MemberComponentId m = MemberComponentId.CreateMemberComponentId(rt, obj, memberId);
+					MemberComponentId m = MemberComponentId.CreateMemberComponentId(rt, obj, memberId, null);
 					MemberComponentIdCustom c = m as MemberComponentIdCustom;
 					if (c != null)
 					{

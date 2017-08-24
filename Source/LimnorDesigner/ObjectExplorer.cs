@@ -2130,7 +2130,11 @@ namespace LimnorDesigner
 		}
 		public TreeNodeClassComponent CreateComponentTreeNode(IClass holder, object v, UInt32 id, UInt32 scopeMethodId, EnumObjectSelectType target, DataTypePointer scope, string eventName)
 		{
+			UInt32 mid = 0;
+			INonHostedObjectsHolder inh = null;
+			string nonHostedName = null;
 			MemberComponentId mc = null;
+
 			MemberComponentIdCustomInstance ci = holder as MemberComponentIdCustomInstance;
 			if (ci != null)
 			{
@@ -2139,6 +2143,12 @@ namespace LimnorDesigner
 			}
 			else
 			{
+				inh = holder.ObjectInstance as INonHostedObjectsHolder;
+				if (inh != null)
+				{
+					nonHostedName = inh.GetNonHostedKeyName(v);
+					mid = holder.MemberId;
+				}
 				MemberComponentIdCustom c = holder as MemberComponentIdCustom;
 				if (c != null)
 				{
@@ -2166,7 +2176,10 @@ namespace LimnorDesigner
 					ClassPointer cp = holder as ClassPointer;
 					if (cp != null)
 					{
-						mc = MemberComponentId.CreateMemberComponentId(cp, v, id);
+						if (!string.IsNullOrEmpty(nonHostedName))
+							mc = MemberComponentId.CreateMemberComponentId(cp, inh, mid, nonHostedName);
+						else
+							mc = MemberComponentId.CreateMemberComponentId(cp, v, id, null);
 					}
 				}
 			}
