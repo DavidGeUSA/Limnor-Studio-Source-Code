@@ -1096,7 +1096,7 @@ namespace LimnorDesigner.Action
 			_varId = XmlUtil.GetAttributeUInt(node, XmlTags.XMLATT_ComponentID);
 			//load DataTypePointer from ComponentIconLocal
 			ClassPointer root = reader.ObjectList.GetTypedData<ClassPointer>();
-			_var = MemberComponentId.CreateMemberComponentId(root, root.ObjectList.GetObjectByID(_varId), _varId);
+			_var = MemberComponentId.CreateMemberComponentId(root, root.ObjectList.GetObjectByID(_varId), _varId, null);
 			adjustParamType();
 		}
 		[Browsable(false)]
