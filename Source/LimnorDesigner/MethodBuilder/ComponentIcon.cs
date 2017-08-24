@@ -1259,7 +1259,7 @@ namespace LimnorDesigner.MethodBuilder
 						}
 						else
 						{
-							MemberComponentId mc = MemberComponentId.CreateMemberComponentId(objMap.GetTypedData<ClassPointer>(), v, MemberId);
+							MemberComponentId mc = MemberComponentId.CreateMemberComponentId(objMap.GetTypedData<ClassPointer>(), v, MemberId, null);
 							ClassPointer = mc;
 						}
 					}
