@@ -192,7 +192,7 @@ namespace XHost
 				}
 				else
 				{
-					MemberComponentId mc = MemberComponentId.CreateMemberComponentId(l.GetRootId(), obj, id);
+					MemberComponentId mc = MemberComponentId.CreateMemberComponentId(l.GetRootId(), obj, id, null);
 					data = new LimnorContextMenuCollection(mc);
 				}
 				_menuData.Add(id, data);
