@@ -2631,7 +2631,7 @@ namespace LimnorDesigner
 			{
 				if (kv.Value != ObjectList.MemberId) //not the root
 				{
-					MemberComponentId mc = MemberComponentId.CreateMemberComponentId(root, kv.Key, kv.Value);
+					MemberComponentId mc = MemberComponentId.CreateMemberComponentId(root, kv.Key, kv.Value, null);
 					list.Add(mc);
 				}
 			}
@@ -2664,7 +2664,7 @@ namespace LimnorDesigner
 			{
 				if (obj == kv.Key)
 				{
-					MemberComponentId mc = MemberComponentId.CreateMemberComponentId(this, kv.Key, kv.Value);
+					MemberComponentId mc = MemberComponentId.CreateMemberComponentId(this, kv.Key, kv.Value, null);
 					return mc;
 				}
 			}
@@ -8763,7 +8763,7 @@ namespace LimnorDesigner
 			_memberId = id;
 			setType();
 		}
-		private string getname()
+		protected virtual string getname()
 		{
 			if (_instance != null)
 			{
@@ -8780,6 +8780,7 @@ namespace LimnorDesigner
 			}
 			return null;
 		}
+		protected virtual bool isNonHosted { get { return false; } }
 		#endregion
 		#region Properties
 		[Browsable(false)]
@@ -8799,7 +8800,7 @@ namespace LimnorDesigner
 			}
 		}
 		[Browsable(false)]
-		public object Instance
+		public virtual object Instance
 		{
 			get
 			{
@@ -8814,7 +8815,7 @@ namespace LimnorDesigner
 			}
 		}
 		[Browsable(false)]
-		public bool IsValid
+		public virtual bool IsValid
 		{
 			get
 			{
@@ -8839,11 +8840,11 @@ namespace LimnorDesigner
 		{
 			get
 			{
-				return DesignUtil.MakeDDWord(_memberId, _root.ClassId);
+				return DesignUtil.MakeDDWord(MemberId, _root.ClassId);
 			}
 		}
 		[Browsable(false)]
-		public UInt32 MemberId
+		public virtual UInt32 MemberId
 		{
 			get
 			{
@@ -8871,7 +8872,7 @@ namespace LimnorDesigner
 			}
 		}
 		[ParenthesizePropertyName(true)]
-		public string Name
+		public virtual string Name
 		{
 			get
 			{
@@ -8957,7 +8958,7 @@ namespace LimnorDesigner
 		/// variable name
 		/// </summary>
 		[Browsable(false)]
-		public string CodeName
+		public virtual string CodeName
 		{
 			get
 			{
@@ -9004,7 +9005,7 @@ namespace LimnorDesigner
 			}
 		}
 		[Browsable(false)]
-		public string TypeString
+		public virtual string TypeString
 		{
 			get
 			{
@@ -9017,7 +9018,7 @@ namespace LimnorDesigner
 			}
 		}
 		[Description("The class of the object")]
-		public string ObjectClass
+		public virtual string ObjectClass
 		{
 			get
 			{
@@ -9141,7 +9142,7 @@ namespace LimnorDesigner
 		public IPropertyPointer PropertyOwner { get { return Owner; } }
 		[Browsable(false)]
 		[ReadOnly(true)]
-		public Type ObjectType
+		public virtual Type ObjectType
 		{
 			get
 			{
@@ -9173,18 +9174,21 @@ namespace LimnorDesigner
 			}
 		}
 
-		public bool IsSameObjectRef(IObjectIdentity objectPointer)
+		public virtual bool IsSameObjectRef(IObjectIdentity objectPointer)
 		{
 			MemberComponentId c = objectPointer as MemberComponentId;
 			if (c != null)
 			{
-				if (c.MemberId != 0 && this.MemberId != 0)
+				if (c.isNonHosted == this.isNonHosted)
 				{
-					return (c.WholeId == this.WholeId);
-				}
-				else
-				{
-					return string.CompareOrdinal(c.Name, this.Name) == 0;
+					if (c.MemberId != 0 && this.MemberId != 0)
+					{
+						return (c.WholeId == this.WholeId);
+					}
+					else
+					{
+						return string.CompareOrdinal(c.Name, this.Name) == 0;
+					}
 				}
 			}
 			return false;
@@ -9355,7 +9359,7 @@ namespace LimnorDesigner
 		}
 		#endregion
 		#region factory
-		public static MemberComponentId CreateMemberComponentId(ClassPointer host, object v, UInt32 memberId)
+		public static MemberComponentId CreateMemberComponentId(ClassPointer host, object v, UInt32 memberId, string nonHostedName)
 		{
 			ClassInstancePointer obj = v as ClassInstancePointer;
 			if (obj != null)
@@ -9367,7 +9371,16 @@ namespace LimnorDesigner
 			{
 				return new MemberComponentIdCustom(host, obj, memberId);
 			}
-			return new MemberComponentId(host, v, memberId);
+			if (string.IsNullOrEmpty(nonHostedName))
+				return new MemberComponentId(host, v, memberId);
+			else
+			{
+				INonHostedObjectsHolder inh = v as INonHostedObjectsHolder;
+				if (inh != null)
+					return new MemberComponentIdNonHosted(host, inh, memberId, nonHostedName);
+				else
+					return new MemberComponentId(host, v, memberId);
+			}
 		}
 		public static MemberComponentId CreateMemberComponentId(ClassInstancePointer host, object v, UInt32 memberId)
 		{
@@ -9856,5 +9869,194 @@ namespace LimnorDesigner
 		}
 
 		#endregion
+	}
+	/// <summary>
+	/// represents an object belonging to a hosted object but is not a property of the hosted object.
+	/// use name to identify it
+	/// use it to represent a column object of a DataGridViewEx
+	/// </summary>
+	public class MemberComponentIdNonHosted : MemberComponentId
+	{
+		private string _name;
+		private INonHostedObjectsHolder _obj;
+		public MemberComponentIdNonHosted()
+		{
+		}
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="root"></param>
+		/// <param name="obj">example: obj be a DataGridViewEx</param>
+		/// <param name="id">example: id be an id for a DataGridViewEx</param>
+		/// <param name="name">example: name be a field name</param>
+		public MemberComponentIdNonHosted(ClassPointer root, INonHostedObjectsHolder obj, UInt32 id, string name)
+			: base(root, obj, id)
+		{
+			_name = name;
+			_obj = obj;
+		}
+		private void verifyHolder()
+		{
+			if (_obj == null)
+			{
+				_obj = base.Instance as INonHostedObjectsHolder;
+			}
+			if (_obj == null)
+			{
+				throw new Exception("Owner of hon-hosted object not found");
+			}
+		}
+		protected override string getname()
+		{
+			return _name;
+		}
+		protected override bool isNonHosted { get { return true; } }
+		[Browsable(false)]
+		public override object Instance
+		{
+			get
+			{
+				verifyHolder();
+				return _obj.GetNonHostedObjectByKeyName(_name);
+			}
+		}
+		[Browsable(false)]
+		public override bool IsValid
+		{
+			get
+			{
+				if (base.IsValid)
+				{
+					return _obj != null && !string.IsNullOrEmpty(_name);
+				}
+				return false;
+			}
+		}
+		[Browsable(false)]
+		public override string CodeName
+		{
+			get
+			{
+				verifyHolder();
+				object v = _obj.GetNonHostedObjectByKeyName(_name);
+				if (v != null)
+					return _obj.GetNonHostedCodeName(v);
+				return _name;
+			}
+		}
+		[Browsable(false)]
+		public override string ReferenceName
+		{
+			get
+			{
+				return CodeName;
+			}
+		}
+		[Browsable(false)]
+		public override string TypeString
+		{
+			get
+			{
+				verifyHolder();
+				object v = _obj.GetNonHostedObjectByKeyName(_name);
+				if (v != null)
+					return v.GetType().AssemblyQualifiedName;
+				return typeof(object).AssemblyQualifiedName;
+			}
+		}
+		[Description("The class of the object")]
+		public override string ObjectClass
+		{
+			get
+			{
+				verifyHolder();
+				object v = _obj.GetNonHostedObjectByKeyName(_name);
+				if (v != null)
+					return v.GetType().FullName;
+				return typeof(object).FullName;
+			}
+		}
+		[Browsable(false)]
+		public override string ClassType
+		{
+			get
+			{
+				verifyHolder();
+				object v = _obj.GetNonHostedObjectByKeyName(_name);
+				if (v != null)
+					return v.GetType().FullName;
+				return "{Unknown}";
+			}
+		}
+		[Browsable(false)]
+		[ReadOnly(true)]
+		public override Type ObjectType
+		{
+			get
+			{
+				verifyHolder();
+				object v = _obj.GetNonHostedObjectByKeyName(_name);
+				if (v != null)
+					return v.GetType();
+				return typeof(object);
+			}
+		}
+		[Browsable(false)]
+		[ReadOnly(true)]
+		public override object ObjectInstance
+		{
+			get
+			{
+				verifyHolder();
+				return _obj.GetNonHostedObjectByKeyName(_name);
+			}
+			set
+			{
+			}
+		}
+		public override bool IsSameObjectRef(IObjectIdentity objectPointer)
+		{
+			MemberComponentIdNonHosted mc = objectPointer as MemberComponentIdNonHosted;
+			if (mc != null)
+			{
+				if (this.WholeId == mc.WholeId)
+				{
+					return (string.CompareOrdinal(mc._name, _name)==0);
+				}
+			}
+			return false;
+		}
+		[Browsable(false)]
+		public override string DisplayName
+		{
+			get
+			{
+				verifyHolder();
+				object v = _obj.GetNonHostedObjectByKeyName(_name);
+				if (v != null)
+					return string.Format(CultureInfo.InvariantCulture, "{0}.{1}", base.DisplayName,_obj.GetNonHostedCodeName(v));
+				return string.Format(CultureInfo.InvariantCulture, "{0}.{1}", base.DisplayName, _name);
+			}
+		}
+		public override object Clone()
+		{
+			verifyHolder();
+			MemberComponentIdNonHosted obj = new MemberComponentIdNonHosted((ClassPointer)Host, _obj, MemberId, _name);
+			return obj;
+		}
+		public override void OnPostSerialize(ObjectIDmap objMap, XmlNode objectNode, bool saved, object serializer)
+		{
+			base.OnPostSerialize(objMap, objectNode, saved, serializer);
+			if (saved)
+			{
+				XmlUtil.SetAttribute(objectNode, "ObjName", _name);
+				return;
+			}
+			else
+			{
+				_name = XmlUtil.GetAttribute(objectNode, "ObjName");
+				_obj = base.ObjectInstance as INonHostedObjectsHolder;
+			}
+		}
 	}
 }
