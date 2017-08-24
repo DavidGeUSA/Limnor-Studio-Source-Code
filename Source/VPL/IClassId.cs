@@ -54,4 +54,10 @@ namespace VPL
 		UInt32 ComponentId { get; }
 		string ComponentName { get; }
 	}
+	public interface INonHostedObjectsHolder
+	{
+		string GetNonHostedCodeName(object v);
+		string GetNonHostedKeyName(object v);
+		object GetNonHostedObjectByKeyName(string keyName);
+	}
 }
