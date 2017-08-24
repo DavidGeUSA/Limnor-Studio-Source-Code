@@ -21,7 +21,7 @@ using XmlUtility;
 namespace LimnorDatabase
 {
 	[ToolboxBitmapAttribute(typeof(DataGridViewEx), "Resources.dgvEx.bmp")]
-	public class DataGridViewEx : DataGridView, IDataGrid, IDevClassReferencer, IPostDeserializeProcess, IPostXmlNodeSerialize
+	public class DataGridViewEx : DataGridView, IDataGrid, IDevClassReferencer, IPostDeserializeProcess, IPostXmlNodeSerialize, INonHostedObjectsHolder
 	{
 		public DataGridViewEx()
 		{
@@ -243,6 +243,46 @@ namespace LimnorDatabase
 			}
 		}
 
+		#endregion
+		#region INonHostedObjectsHolder Member
+		public string GetNonHostedCodeName(object v)
+		{
+			DataGridViewColumn dgvc = v as DataGridViewColumn;
+			if (dgvc != null)
+			{
+				return dgvc.Name;
+			}
+			return string.Empty;
+		}
+		public string GetNonHostedKeyName(object v)
+		{
+			DataGridViewColumn dgvc = v as DataGridViewColumn;
+			if (dgvc != null)
+			{
+				if (!string.IsNullOrEmpty(dgvc.DataPropertyName))
+					return dgvc.DataPropertyName;
+				return dgvc.Name;
+			}
+			return string.Empty;
+		}
+		public object GetNonHostedObjectByKeyName(string key)
+		{
+			for (int i = 0; i < this.Columns.Count; i++)
+			{
+				if (string.CompareOrdinal(key, this.Columns[i].DataPropertyName) == 0)
+				{
+					return this.Columns[i];
+				}
+			}
+			for (int i = 0; i < this.Columns.Count; i++)
+			{
+				if (string.CompareOrdinal(key, this.Columns[i].Name) == 0)
+				{
+					return this.Columns[i];
+				}
+			}
+			return null;
+		}
 		#endregion
 	}
 }
