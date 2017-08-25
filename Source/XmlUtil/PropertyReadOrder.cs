@@ -74,6 +74,10 @@ namespace XmlUtility
 				}
 			}
 		}
+		public void SetOrder(UInt32 order)
+		{
+			_order = order;
+		}
 		public UInt32 ReadOrder
 		{
 			get

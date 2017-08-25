@@ -1342,6 +1342,13 @@ namespace XmlSerializer
 						PropertyReadOrder pro = new PropertyReadOrder(prop, propNode, idx++, (UInt32)properties.Count);
 						if (!pro.Exclude)
 						{
+							if (string.CompareOrdinal(prop.Name, "Controls") == 0)
+							{
+								if (obj is Control)
+								{
+									pro.SetOrder((UInt32)properties.Count);
+								}
+							}
 							sortedProperties.Add(pro.ReadOrder, pro);
 						}
 					}
