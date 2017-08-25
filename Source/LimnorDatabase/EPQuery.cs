@@ -1145,13 +1145,13 @@ namespace LimnorDatabase
 				if (tbl != null)
 				{
 					int n = RowIndex;
-					if (n >= 0 && _currentRowIndex != n)
+					//if (n >= 0 && _currentRowIndex != n)
+					//{
+					if (n>= 0 && tbl.Rows.Count > n)
 					{
-						if (tbl.Rows.Count > n)
-						{
-							return tbl.Rows[n];
-						}
+						return tbl.Rows[n];
 					}
+					//}
 				}
 				return null;
 			}
@@ -1912,10 +1912,15 @@ namespace LimnorDatabase
 			{
 				if (!this.ReadOnly)
 				{
+					DataRow r = this.CurrentDataRow;
 					BindingManagerBase cm = getCurrencyManager();
 					if (cm != null)
 					{
 						cm.CancelCurrentEdit();
+						if (r != null)
+						{
+							r.RejectChanges();
+						}
 						return true;
 					}
 				}
