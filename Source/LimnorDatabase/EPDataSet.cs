@@ -312,6 +312,9 @@ namespace LimnorDatabase
 		public event EventHandlerWithCancel DeletingCurrentRecord;
 		[Description("Occurs when a DeleteCurrentRecord action succeeds.")]
 		public event EventHandler DeletedCurrentRecord;
+
+		[Description("Occurs when a value is being changed for the specified DataColumn in a DataRow. At this event, property Column.Ordinal of the event parameter e indicates 0-based column number of the data being modified; the RowIndex property of the EasyDataSet indicates the 0-based row number of the data being modified; property ProposedValue of the event parameter e indicates the new data.")]
+		public event DataColumnChangeEventHandler ColumnChanging;
 		
 		[Browsable(false)]
 		[Description("This event occurs when the row count changed from 0 to non-0 or from non-0 to 0.")]
@@ -1384,8 +1387,21 @@ namespace LimnorDatabase
 						DataFetched(i, new WebDataRow(_qry.DataTable.Rows[i].ItemArray));
 					}
 				}
+				DataTable t = this.DataTable;
+				if (t != null)
+				{
+					t.ColumnChanging += t_ColumnChanging;
+				}
 			}
 			return bOK;
+		}
+
+		void t_ColumnChanging(object sender, DataColumnChangeEventArgs e)
+		{
+			if (ColumnChanging != null)
+			{
+				ColumnChanging(this, e);
+			}
 		}
 		public void CreateRandomNewRecord()
 		{
