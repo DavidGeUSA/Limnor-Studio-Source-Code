@@ -45,9 +45,13 @@
 			this.label2 = new System.Windows.Forms.Label();
 			this.txtBatch = new System.Windows.Forms.TextBox();
 			this.btBatchFile = new System.Windows.Forms.Button();
+			this.progressBar1 = new System.Windows.Forms.ProgressBar();
+			this.lblCounts = new System.Windows.Forms.Label();
+			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
 			this.splitContainer1.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
 			this.splitContainer2.Panel1.SuspendLayout();
 			this.splitContainer2.Panel2.SuspendLayout();
 			this.splitContainer2.SuspendLayout();
@@ -64,8 +68,8 @@
 			// 
 			// textBoxRootDir
 			// 
-			this.textBoxRootDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			this.textBoxRootDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.textBoxRootDir.Location = new System.Drawing.Point(80, 52);
 			this.textBoxRootDir.Name = "textBoxRootDir";
 			this.textBoxRootDir.Size = new System.Drawing.Size(391, 20);
@@ -95,9 +99,9 @@
 			// 
 			// splitContainer1
 			// 
-			this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-						| System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.splitContainer1.Location = new System.Drawing.Point(3, 144);
 			this.splitContainer1.Name = "splitContainer1";
 			// 
@@ -156,7 +160,7 @@
 			this.listBox1.FormattingEnabled = true;
 			this.listBox1.Location = new System.Drawing.Point(0, 0);
 			this.listBox1.Name = "listBox1";
-			this.listBox1.Size = new System.Drawing.Size(335, 121);
+			this.listBox1.Size = new System.Drawing.Size(335, 130);
 			this.listBox1.TabIndex = 0;
 			this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
 			// 
@@ -172,8 +176,8 @@
 			// 
 			// lblInfo
 			// 
-			this.lblInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-						| System.Windows.Forms.AnchorStyles.Right)));
+			this.lblInfo.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
 			this.lblInfo.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
 			this.lblInfo.Location = new System.Drawing.Point(3, 106);
 			this.lblInfo.Name = "lblInfo";
@@ -183,7 +187,7 @@
 			// buttonCancel
 			// 
 			this.buttonCancel.Enabled = false;
-			this.buttonCancel.Location = new System.Drawing.Point(118, 78);
+			this.buttonCancel.Location = new System.Drawing.Point(97, 78);
 			this.buttonCancel.Name = "buttonCancel";
 			this.buttonCancel.Size = new System.Drawing.Size(75, 23);
 			this.buttonCancel.TabIndex = 6;
@@ -217,11 +221,31 @@
 			this.btBatchFile.UseVisualStyleBackColor = true;
 			this.btBatchFile.Click += new System.EventHandler(this.btBatchFile_Click);
 			// 
+			// progressBar1
+			// 
+			this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.progressBar1.Location = new System.Drawing.Point(178, 78);
+			this.progressBar1.Name = "progressBar1";
+			this.progressBar1.Size = new System.Drawing.Size(233, 23);
+			this.progressBar1.TabIndex = 10;
+			// 
+			// lblCounts
+			// 
+			this.lblCounts.AutoSize = true;
+			this.lblCounts.Location = new System.Drawing.Point(417, 83);
+			this.lblCounts.Name = "lblCounts";
+			this.lblCounts.Size = new System.Drawing.Size(24, 13);
+			this.lblCounts.TabIndex = 11;
+			this.lblCounts.Text = "0/0";
+			// 
 			// FormBatchBuilder
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(514, 348);
+			this.Controls.Add(this.lblCounts);
+			this.Controls.Add(this.progressBar1);
 			this.Controls.Add(this.btBatchFile);
 			this.Controls.Add(this.txtBatch);
 			this.Controls.Add(this.label2);
@@ -238,10 +262,12 @@
 			this.Text = "Batch Builder";
 			this.splitContainer1.Panel1.ResumeLayout(false);
 			this.splitContainer1.Panel2.ResumeLayout(false);
+			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
 			this.splitContainer1.ResumeLayout(false);
 			this.splitContainer2.Panel1.ResumeLayout(false);
 			this.splitContainer2.Panel2.ResumeLayout(false);
 			this.splitContainer2.Panel2.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
 			this.splitContainer2.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
@@ -265,5 +291,7 @@
 		private System.Windows.Forms.Label label2;
 		private System.Windows.Forms.TextBox txtBatch;
 		private System.Windows.Forms.Button btBatchFile;
+		private System.Windows.Forms.ProgressBar progressBar1;
+		private System.Windows.Forms.Label lblCounts;
     }
 }

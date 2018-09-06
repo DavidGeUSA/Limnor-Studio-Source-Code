@@ -72,6 +72,12 @@ namespace LimnorVOB
 			_generic = new BuildResult("Batch Builder");
 			bool b = TraceLogClass.TraceLog.ShowMessageBox;
 			TraceLogClass.TraceLog.ShowMessageBox = false;
+			_slnCount = 0;
+			_slnProcessed = 0;
+			progressBar1.Value = 0;
+			progressBar1.Refresh();
+			lblCounts.Text = "0/0";
+			lblCounts.Refresh();
 			try
 			{
 				string bf = txtBatch.Text.Trim();
@@ -80,6 +86,7 @@ namespace LimnorVOB
 				if (bf.Length > 0)
 				{
 					textBoxRootDir.ReadOnly = true;
+					StringCollection sc = new StringCollection();
 					StreamReader sr = new StreamReader(bf);
 					while (!sr.EndOfStream)
 					{
@@ -88,14 +95,26 @@ namespace LimnorVOB
 						{
 							textBoxRootDir.Text = line;
 							textBoxRootDir.Refresh();
-							processFolder(line);
+							processFolder(line, true);
+							sc.Add(line);
 						}
 					}
 					sr.Close();
+					lblCounts.Text = string.Format(CultureInfo.InvariantCulture, "0/{0}", _slnCount);
+					lblCounts.Refresh();
+					foreach (string line in sc)
+					{
+						textBoxRootDir.Text = line;
+						textBoxRootDir.Refresh();
+						processFolder(line, false);
+					}
 				}
 				else
 				{
-					processFolder(textBoxRootDir.Text);
+					processFolder(textBoxRootDir.Text, true);
+					lblCounts.Text = string.Format(CultureInfo.InvariantCulture, "0/{0}", _slnCount);
+					lblCounts.Refresh();
+					processFolder(textBoxRootDir.Text, false);
 				}
 			}
 			catch (Exception err)
@@ -222,10 +241,13 @@ namespace LimnorVOB
 			sln.End();
 			Application.DoEvents();
 		}
-		private void processFolder(string folder)
+		private int _slnCount = 0;
+		private int _slnProcessed = 0;
+		private void processFolder(string folder, bool countOnly)
 		{
 			if (_cancel)
 				return;
+			double percent;
 			string buildOrder = Path.Combine(folder, "build_order.xml");
 			if (File.Exists(buildOrder))
 			{
@@ -234,15 +256,31 @@ namespace LimnorVOB
 				if (doc.DocumentElement != null)
 				{
 					XmlNodeList nds = doc.DocumentElement.SelectNodes(XmlTags.XML_Item);
-					for (int i = 0; i < nds.Count; i++)
+					if (countOnly)
 					{
-						string slnFolder = XmlUtil.GetAttribute(nds[i], "folder");
-						string dir = Path.Combine(folder, slnFolder);
-						string file = XmlUtil.GetAttribute(nds[i], "file");
-						file = Path.Combine(dir, file);
-						buildSolution(file);
-						if (_cancel)
-							break;
+						_slnCount += nds.Count;
+					}
+					else
+					{
+						for (int i = 0; i < nds.Count; i++)
+						{
+							string slnFolder = XmlUtil.GetAttribute(nds[i], "folder");
+							string dir = Path.Combine(folder, slnFolder);
+							string file = XmlUtil.GetAttribute(nds[i], "file");
+							file = Path.Combine(dir, file);
+							buildSolution(file);
+							_slnProcessed++;
+							if (_slnCount > 0)
+							{
+								percent = (double)_slnProcessed / (double)_slnCount;
+								progressBar1.Value = (int)(percent*100.0);
+								progressBar1.Refresh();
+								lblCounts.Text = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", _slnProcessed, _slnCount);
+								lblCounts.Refresh();
+							}
+							if (_cancel)
+								break;
+						}
 					}
 				}
 			}
@@ -251,11 +289,27 @@ namespace LimnorVOB
 				string[] slnFiles = Directory.GetFiles(folder, "*.LimnorMain_sln");
 				if (slnFiles != null && slnFiles.Length > 0)
 				{
-					for (int i = 0; i < slnFiles.Length; i++)
+					if (countOnly)
 					{
-						buildSolution(slnFiles[i]);
-						if (_cancel)
-							break;
+						_slnCount += slnFiles.Length;
+					}
+					else
+					{
+						for (int i = 0; i < slnFiles.Length; i++)
+						{
+							buildSolution(slnFiles[i]);
+							_slnProcessed++;
+							if (_slnCount > 0)
+							{
+								percent = (double)_slnProcessed / (double)_slnCount;
+								progressBar1.Value = (int)(percent * 100.0);
+								progressBar1.Refresh();
+								lblCounts.Text = string.Format(CultureInfo.InvariantCulture, "{0}/{1}", _slnProcessed, _slnCount);
+								lblCounts.Refresh();
+							}
+							if (_cancel)
+								break;
+						}
 					}
 				}
 				string[] subFolders = Directory.GetDirectories(folder);
@@ -263,7 +317,7 @@ namespace LimnorVOB
 				{
 					for (int i = 0; i < subFolders.Length; i++)
 					{
-						processFolder(subFolders[i]);
+						processFolder(subFolders[i], countOnly);
 						if (_cancel)
 							break;
 					}
@@ -482,10 +536,11 @@ namespace LimnorVOB
 
 		private void btBatchFile_Click(object sender, EventArgs e)
 		{
-			FolderBrowserDialog dlg = new FolderBrowserDialog();
+			OpenFileDialog dlg = new OpenFileDialog();
+			dlg.CheckFileExists = true;
 			if (dlg.ShowDialog(this) == DialogResult.OK)
 			{
-				txtBatch.Text = dlg.SelectedPath;
+				txtBatch.Text = dlg.FileName;
 			}
 		}
 	}
