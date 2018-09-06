@@ -848,6 +848,18 @@ namespace MathExp
 							return this[1].DataType;
 						}
 					}
+					////////////////////////////////////////////
+					if (this[0].DataType != null && this[1].DataType != null)
+					{
+						if (this[0].DataType.LibType != null && this[1].DataType.LibType != null)
+						{
+							if (this[0].DataType.LibType == this[1].DataType.LibType)
+							{
+								_dataType = new RaisDataType();
+								_dataType.LibType = this[0].DataType.LibType;
+							}
+						}
+					}
 				}
 				////////////////////////////////////////////
 				if (_dataType == null)

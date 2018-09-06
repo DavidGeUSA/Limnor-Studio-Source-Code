@@ -96,8 +96,19 @@ namespace MathExp
 			{
 				if (_dataType == null)
 				{
-					_dataType = new RaisDataType();
-					_dataType.LibType = typeof(Int64);
+					_dataType = base.DataType;
+					if (_dataType == null)
+					{
+						_dataType = new RaisDataType();
+						_dataType.LibType = typeof(Int64);
+					}
+					else
+					{
+						if (_dataType.IsLibType && !_dataType.IsInteger)
+						{
+							_dataType.LibType = typeof(Int64);
+						}
+					}
 				}
 				return _dataType;
 			}
