@@ -37,6 +37,9 @@ namespace LimnorDesigner.MethodBuilder
 {
 	public class MethodInfoPointer : MethodPointer, IMethodMeta
 	{
+	
+	        private bool isArrayType;
+		
 		private MethodInfo _mif;
 		private bool _isWebServerMethod;
 		//
@@ -262,6 +265,11 @@ namespace LimnorDesigner.MethodBuilder
 			if (b)
 			{
 				CodeArrayIndexerExpression ai = new CodeArrayIndexerExpression(OnGetTargetObject(targetObject), ParameterCodeExpressions);
+				return ai;
+			}
+			else if (isArrayType)
+			{
+				CodeArrayIndexerExpression ai = new CodeArrayIndexerExpression(OnGetTargetObject(targetObject), ParameterCodeExpressions[0]);
 				return ai;
 			}
 			else
@@ -725,6 +733,17 @@ namespace LimnorDesigner.MethodBuilder
 							ps = new CodeExpression[] { };
 						}
 						SetParameterExpressions(ps);
+						
+						isArrayType = string.Compare(mif.Name, "set_Item", StringComparison.Ordinal) == 0;
+						isArrayType = isArrayType && mif.IsSpecialName;
+						if (isArrayType)
+						{
+							CodeExpression tarobj = GetReferenceCode(methodToCompile, statements, false);
+							CodeAssignStatement cas00 = new CodeAssignStatement(tarobj, ps[1]);
+							statements.Add(cas00);
+							return;
+						}
+						
 						cmi = GetReferenceCode(methodToCompile, statements, false);
 					}
 				}
